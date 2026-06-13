@@ -87,6 +87,7 @@
   #start .title{ font-size:40px; font-weight:900; color:var(--orange); text-shadow:2px 2px 0 #fff; margin:6px 0; }
   #start .row{ font-size:46px; letter-spacing:4px; margin:6px 0 22px; }
   #startBtn{ background:var(--red); font-size:30px; padding:26px 30px; max-width:340px; animation:pulse 1.6s ease-in-out infinite; }
+  .appver{ position:absolute; left:0; right:0; bottom:calc(var(--safe-bottom) + 12px); text-align:center; font-size:13px; font-weight:800; color:rgba(0,0,0,.32); letter-spacing:.5px; }
   @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
 
   /* せってい */
@@ -238,6 +239,7 @@
   <div class="title">ぶーぶーランド</div>
   <div class="row">🚓 🚜 🚌 🚁</div>
   <button id="startBtn" class="bigbtn"><span class="ico">👆</span>タッチして はじめる</button>
+  <div class="appver" id="appVersion"></div>
 </section>
 
 <!-- ========== なまえ せってい ========== -->
@@ -375,6 +377,9 @@
    ぶーぶーランド — 2さい むけ はたらくのりもの あぷり
    すべて オフラインで かんけつ。外部API・サーバー・ビルドツール 不要。
    ========================================================================= */
+
+/** アプリのバージョン（トップ画面に表示）。 */
+const APP_VERSION = "v0.1.1";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -1723,6 +1728,9 @@ if ("serviceWorker" in navigator){
 /* ============================== イベント はいせん ============================== */
 function bind(){
   renderMascots();
+
+  const verEl = document.getElementById("appVersion");
+  if (verEl) verEl.textContent = APP_VERSION;
 
   // スタート（unlock）
   document.getElementById("startBtn").addEventListener("click", () => {
