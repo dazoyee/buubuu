@@ -1,0 +1,31 @@
+docs/plans/
+
+# OS 生成物
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# エディタ / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Claude Code 関連
+.claude/
+
+# ログ / 一時ファイル
+*.log
+tmp/
+.cache/
+
+# 環境変数 / シークレット
+.env
+.env.*
+
+# 依存関係（将来ツールを入れた場合）
+node_modules/

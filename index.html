@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>ぶーぶーランド</title>
+<meta name="theme-color" content="#ffb300" />
+<meta name="description" content="2さいのおこさんと あそぶ はたらくのりもの あぷり" />
+
+<!-- iOS / PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="ぶーぶーランド" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<!-- apple-touch-icon は起動時に Canvas で PNG data URI をその場生成して差し替える -->
+<link id="appleIcon" rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Crect%20width='180'%20height='180'%20rx='40'%20fill='%23ffb300'/%3E%3Ctext%20x='90'%20y='128'%20font-size='110'%20text-anchor='middle'%3E%F0%9F%9A%92%3C/text%3E%3C/svg%3E" />
+
+<style>
+  :root{
+    --road:#37474f;        /* どうろ */
+    --yellow:#ffce00;      /* こうじ きいろ */
+    --orange:#ff8f00;
+    --amber:#ffb300;
+    --red:#ef4136;
+    --blue:#29a3ff;
+    --green:#41c36a;
+    --cream:#fff7e6;
+    --ink:#2b2b2b;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; }
+  html,body{ margin:0; padding:0; height:100%; overflow:hidden; }
+  body{
+    font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4","Rounded Mplus 1c",
+      "Hiragino Sans","Yu Gothic",sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    user-select:none; -webkit-user-select:none;
+    touch-action:manipulation;
+    overscroll-behavior:none;
+  }
+  .stripes{
+    height:14px;
+    background:repeating-linear-gradient(45deg,var(--ink) 0 16px,var(--yellow) 16px 32px);
+  }
+
+  /* 画面共通 */
+  .screen{
+    position:fixed; inset:0;
+    display:none;
+    flex-direction:column;
+    padding:calc(var(--safe-top) + 8px) 14px calc(var(--safe-bottom) + 14px);
+  }
+  .screen.active{ display:flex; }
+  .center{ align-items:center; justify-content:center; text-align:center; }
+
+  /* マスコット */
+  .mascot{
+    font-size:64px; line-height:1;
+    filter:drop-shadow(0 4px 0 rgba(0,0,0,.12));
+    animation:bob 1.8s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .speech{
+    background:#fff; border:4px solid var(--amber); border-radius:22px;
+    padding:12px 18px; margin:10px auto 0; max-width:90%;
+    font-size:21px; font-weight:700; line-height:1.4;
+    box-shadow:0 6px 0 rgba(0,0,0,.08);
+  }
+
+  /* ボタン */
+  .bigbtn{
+    border:none; border-radius:30px; color:#fff;
+    font-family:inherit; font-weight:800;
+    box-shadow:0 8px 0 rgba(0,0,0,.18);
+    transition:transform .08s, box-shadow .08s, filter .12s;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    gap:12px; width:100%;
+  }
+  .bigbtn:active{ transform:translateY(6px); box-shadow:0 2px 0 rgba(0,0,0,.18); filter:brightness(1.08); }
+  .bigbtn .ico{ font-size:1.5em; }
+
+  /* スタート */
+  #start{ background:linear-gradient(180deg,#fff3cf,#ffd966); }
+  #start .title{ font-size:40px; font-weight:900; color:var(--orange); text-shadow:2px 2px 0 #fff; margin:6px 0; }
+  #start .row{ font-size:46px; letter-spacing:4px; margin:6px 0 22px; }
+  #startBtn{ background:var(--red); font-size:30px; padding:26px 30px; max-width:340px; animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+  /* せってい */
+  #setup .panel,#parent .panel{
+    background:#fff; border:5px solid var(--amber); border-radius:26px;
+    padding:22px; width:100%; max-width:420px; box-shadow:0 10px 0 rgba(0,0,0,.08);
+  }
+  .lbl{ font-size:20px; font-weight:800; color:var(--orange); margin-bottom:8px; }
+  #nameInput,#nameInput2{
+    width:100%; font-family:inherit; font-size:30px; text-align:center; font-weight:800;
+    padding:14px; border:4px solid var(--amber); border-radius:18px; background:var(--cream);
+  }
+  #nameInput:focus,#nameInput2:focus{ outline:none; border-color:var(--orange); }
+
+  /* ホーム */
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .gearbtn{
+    width:54px; height:54px; border-radius:16px; border:none; background:rgba(0,0,0,.06);
+    font-size:24px; cursor:pointer; flex:0 0 auto;
+  }
+  .menu{ display:flex; flex-direction:column; gap:14px; width:100%; max-width:440px; margin:auto 0; }
+  .modebtn{ font-size:26px; padding:24px 18px; }
+  .modebtn.m1{ background:var(--red); }
+  .modebtn.m2{ background:var(--blue); }
+  .modebtn.m3{ background:var(--green); }
+  .garagebtn{ background:var(--orange); font-size:23px; padding:18px; }
+
+  /* モード共通ヘッダ */
+  .modehead{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .backbtn{
+    border:none; background:var(--ink); color:#fff; font-family:inherit; font-weight:800;
+    font-size:18px; padding:12px 18px; border-radius:18px; cursor:pointer;
+    box-shadow:0 5px 0 rgba(0,0,0,.18);
+  }
+  .backbtn:active{ transform:translateY(4px); box-shadow:0 1px 0 rgba(0,0,0,.18); }
+  .modetitle{ font-size:22px; font-weight:900; color:var(--orange); }
+
+  /* これなあに / 音まね の大きな絵 */
+  .stage{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+  .card{
+    width:min(74vw,330px); height:min(74vw,330px); border-radius:38px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:min(46vw,210px); line-height:1;
+    box-shadow:0 12px 0 rgba(0,0,0,.16); cursor:pointer;
+    transition:transform .1s, filter .1s;
+    background:#fff; border:6px solid var(--amber);
+  }
+  .card:active{ transform:scale(.96); filter:brightness(1.05); }
+  .card.pop{ animation:popa .4s ease; }
+  @keyframes popa{ 0%{transform:scale(1)} 40%{transform:scale(1.12) rotate(-3deg)} 100%{transform:scale(1)} }
+  .nameplate{ font-size:30px; font-weight:900; color:var(--ink); min-height:38px; }
+  .hint{ font-size:16px; color:#7a7a7a; font-weight:700; }
+  .nextbtn{ background:var(--amber); font-size:24px; padding:20px; width:100%; max-width:360px; margin-top:6px; }
+
+  /* お話 */
+  #story .picker{ display:flex; gap:14px; width:100%; max-width:420px; margin:auto; }
+  .pickbtn{ flex:1; font-size:24px; padding:30px 12px; flex-direction:column; gap:8px; }
+  .pickbtn.short{ background:var(--green); }
+  .pickbtn.long{ background:var(--blue); }
+  .storybox{
+    flex:1; overflow:auto; background:#fff; border:5px solid var(--green); border-radius:24px;
+    padding:20px; margin:10px 0; font-size:23px; line-height:1.9; font-weight:700;
+    box-shadow:0 8px 0 rgba(0,0,0,.06); -webkit-overflow-scrolling:touch;
+  }
+  .storyhead{ font-size:64px; text-align:center; margin-bottom:6px; }
+  .storyactions{ display:flex; gap:12px; }
+  .storyactions .bigbtn{ font-size:20px; padding:18px 12px; }
+  .repeatbtn{ background:var(--green); }
+  .newbtn{ background:var(--orange); }
+
+  /* ガレージ */
+  #garage .grid{
+    flex:1; overflow:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+    padding:6px 2px; -webkit-overflow-scrolling:touch;
+  }
+  .cell{
+    aspect-ratio:1/1; border-radius:22px; background:#eceff1; border:4px solid #cfd8dc;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    font-size:54px; cursor:pointer; position:relative;
+  }
+  .cell .nm{ font-size:13px; font-weight:800; color:#90a4ae; }
+  .cell.locked .emoji{ filter:grayscale(1) brightness(0) opacity(.25); }
+  .cell.unlocked{ background:#fff; border-color:var(--amber); box-shadow:0 5px 0 rgba(0,0,0,.08); }
+  .cell.unlocked .nm{ color:var(--ink); }
+  .cell.unlocked:active{ transform:scale(.95); }
+  .progress{ text-align:center; font-size:18px; font-weight:800; color:var(--orange); margin:4px 0 8px; }
+
+  /* 保護者ゲート長押しヒント（極小） */
+  #parent .panel .row2{ display:flex; gap:12px; margin-top:8px; }
+  #parent .panel .row2 .bigbtn{ font-size:20px; padding:16px; }
+  .voicebtn{ background:var(--blue); }
+  .savebtn{ background:var(--green); }
+  .closebtn{ background:var(--ink); }
+  .note{ font-size:14px; color:#888; margin-top:14px; line-height:1.6; }
+  .hide{ display:none !important; }
+</style>
+</head>
+<body>
+
+<!-- ========== スタート（音声/Audio unlock） ========== -->
+<section id="start" class="screen center active">
+  <div class="mascot">🚒</div>
+  <div class="title">ぶーぶーランド</div>
+  <div class="row">🚓 🚜 🚌 🚁</div>
+  <button id="startBtn" class="bigbtn"><span class="ico">👆</span>タッチして はじめる</button>
+</section>
+
+<!-- ========== なまえ せってい ========== -->
+<section id="setup" class="screen center">
+  <div class="mascot">🚒</div>
+  <div class="speech">こんにちは！ ぶーぶーだよ。<br>おなまえを おしえてね。</div>
+  <div class="panel" style="margin-top:18px;">
+    <div class="lbl">おこさんの おなまえ</div>
+    <input id="nameInput" type="text" inputmode="text" maxlength="10" placeholder="なまえ" autocomplete="off" />
+    <button id="setupSave" class="bigbtn savebtn" style="margin-top:16px;font-size:24px;padding:18px;">
+      <span class="ico">🚦</span>はじめる
+    </button>
+  </div>
+</section>
+
+<!-- ========== ホーム ========== -->
+<section id="home" class="screen">
+  <div class="topbar">
+    <div style="width:54px"></div>
+    <div class="mascot" style="font-size:48px;">🚒</div>
+    <button class="gearbtn" id="gearBtn" aria-label="ほごしゃ">⚙️</button>
+  </div>
+  <div class="speech" id="homeSpeech" style="margin-bottom:10px;">あそぼう！</div>
+  <div class="menu">
+    <button class="bigbtn modebtn m1" data-go="m1"><span class="ico">🔎</span>これ なあに？</button>
+    <button class="bigbtn modebtn m2" data-go="m2"><span class="ico">🔊</span>おと・まね あそび</button>
+    <button class="bigbtn modebtn m3" data-go="m3"><span class="ico">📖</span>みじかい おはなし</button>
+    <button class="bigbtn garagebtn" data-go="garage"><span class="ico">🏠</span>ガレージ（ずかん）</button>
+  </div>
+</section>
+
+<!-- ========== ① これなあに ========== -->
+<section id="m1" class="screen">
+  <div class="modehead">
+    <button class="backbtn" data-go="home">◀ もどる</button>
+    <div class="modetitle">これ なあに？</div>
+    <div style="width:78px"></div>
+  </div>
+  <div class="stage">
+    <div class="card" id="m1Card">🚒</div>
+    <div class="nameplate" id="m1Name"> </div>
+    <div class="hint">えを タッチしてね</div>
+  </div>
+  <button class="bigbtn nextbtn" id="m1Next"><span class="ico">➡️</span>つぎの のりもの</button>
+</section>
+
+<!-- ========== ② 音・まね遊び ========== -->
+<section id="m2" class="screen">
+  <div class="modehead">
+    <button class="backbtn" data-go="home">◀ もどる</button>
+    <div class="modetitle">おと・まね あそび</div>
+    <div style="width:78px"></div>
+  </div>
+  <div class="stage">
+    <div class="card" id="m2Card" style="border-color:var(--blue);">🚒</div>
+    <div class="nameplate" id="m2Onoma"> </div>
+    <div class="hint">えを タッチすると おとが でるよ</div>
+  </div>
+  <button class="bigbtn nextbtn" id="m2Next" style="background:var(--blue);"><span class="ico">➡️</span>つぎの おと</button>
+</section>
+
+<!-- ========== ③ みじかいお話 ========== -->
+<section id="m3" class="screen">
+  <div class="modehead">
+    <button class="backbtn" id="m3Back">◀ もどる</button>
+    <div class="modetitle">おはなし</div>
+    <div style="width:78px"></div>
+  </div>
+
+  <!-- みじかい/ながい えらぶ -->
+  <div id="m3Picker" class="stage">
+    <div class="speech" style="margin-bottom:6px;">どっちの おはなし？</div>
+    <div class="picker">
+      <button class="bigbtn pickbtn short" data-len="short"><span style="font-size:1.4em">🐣</span>みじかいの</button>
+      <button class="bigbtn pickbtn long" data-len="long"><span style="font-size:1.4em">🐘</span>ながいの</button>
+    </div>
+  </div>
+
+  <!-- おはなし ほんぶん -->
+  <div id="m3View" class="stage hide" style="width:100%;">
+    <div class="storyhead" id="storyEmoji">📖</div>
+    <div class="storybox" id="storyText"></div>
+    <div class="storyactions" style="width:100%;">
+      <button class="bigbtn repeatbtn" id="storyRepeat" style="flex:1;"><span class="ico">🔁</span>もういちど</button>
+      <button class="bigbtn newbtn" id="storyNew" style="flex:1;"><span class="ico">✨</span>あたらしい おはなし</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========== ガレージ ========== -->
+<section id="garage" class="screen">
+  <div class="modehead">
+    <button class="backbtn" data-go="home">◀ もどる</button>
+    <div class="modetitle">ガレージ（ずかん）</div>
+    <div style="width:78px"></div>
+  </div>
+  <div class="progress" id="garageProgress"></div>
+  <div class="grid" id="garageGrid"></div>
+</section>
+
+<!-- ========== 保護者ゲート（設定） ========== -->
+<section id="parent" class="screen center">
+  <div class="panel">
+    <div class="lbl">⚙️ ほごしゃの せってい</div>
+    <div style="font-size:16px;color:#666;margin-bottom:10px;">なまえの へんこう</div>
+    <input id="nameInput2" type="text" inputmode="text" maxlength="10" placeholder="なまえ" autocomplete="off" />
+    <div class="row2">
+      <button class="bigbtn savebtn" id="parentSave"><span class="ico">💾</span>ほぞん</button>
+      <button class="bigbtn voicebtn" id="voiceTest"><span class="ico">🔊</span>こえテスト</button>
+    </div>
+    <div class="row2">
+      <button class="bigbtn closebtn" id="parentClose" style="flex:1;"><span class="ico">✅</span>とじる</button>
+    </div>
+    <div class="note">
+      「こえテスト」で にほんごの こえが でるか かくにん できます。<br>
+      この がめんは おとなが 3びょう ながおしで ひらきます。
+    </div>
+  </div>
+</section>
+
+<div class="stripes" style="position:fixed;left:0;right:0;bottom:0;z-index:-1;"></div>
+
+<script>
+"use strict";
+/* =========================================================================
+   ぶーぶーランド — 2さい むけ はたらくのりもの あぷり
+   すべて オフラインで かんけつ。外部API・サーバー・ビルドツール 不要。
+   ========================================================================= */
+
+/* ----------------------------- 同梱データ ----------------------------- */
+
+/** はたらくのりもの（なまえ・絵文字・オノマトペ・効果音タイプ・やさしい一言） */
+const VEHICLES = [
+  { id:"shoubou",    name:"しょうぼうしゃ",     emoji:"🚒", onoma:"うー うー！",        sound:"siren",   word:"あかくて かっこいい しょうぼうしゃ。みずを かけて おてつだい するよ。" },
+  { id:"patokaa",    name:"ぱとかー",           emoji:"🚓", onoma:"ぴーぽー ぴーぽー！",  sound:"siren",   word:"しろと くろの ぱとかー。まちを ぐるぐる みまわるよ。" },
+  { id:"kyuukyuu",   name:"きゅうきゅうしゃ",   emoji:"🚑", onoma:"ぴーぽー ぴーぽー！",  sound:"siren",   word:"しろい きゅうきゅうしゃ。みんなを やさしく はこぶよ。" },
+  { id:"dump",       name:"だんぷかー",         emoji:"🚛", onoma:"ぶろろろ ろー！",      sound:"engine",  word:"おおきな だんぷかー。すなを いっぱい のせて はこぶよ。" },
+  { id:"gomi",       name:"ごみしゅうしゅうしゃ", emoji:"🚚", onoma:"うぃーん がしゃ！",   sound:"engine",  word:"ごみを あつめて まちを ぴかぴかに するよ。ありがとう！" },
+  { id:"crane",      name:"くれーんしゃ",       emoji:"🏗️", onoma:"ぐいーん ぐいーん！",  sound:"motor",   word:"たかーい くれーんしゃ。おもいものを そらへ もちあげるよ。" },
+  { id:"shovel",     name:"しょべるかー",       emoji:"🚜", onoma:"がりがり ざくざく！",  sound:"dig",     word:"つちを ざくざく ほる しょべるかー。あなを ほるのが じょうずだよ。" },
+  { id:"bus",        name:"ばす",               emoji:"🚌", onoma:"ぶっ ぶー！",          sound:"horn",   word:"きいろい ばす。みんなを のせて しゅっぱつ するよ。" },
+  { id:"taxi",       name:"たくしー",           emoji:"🚕", onoma:"ぷっ ぷー！",          sound:"horn",   word:"きいろい たくしー。いきたい ところへ つれていくよ。" },
+  { id:"truck",      name:"とらっく",           emoji:"🛻", onoma:"ぶーん ぶーん！",      sound:"engine",  word:"にもつを はこぶ とらっく。どこへでも はしっていくよ。" },
+  { id:"densha",     name:"でんしゃ",           emoji:"🚃", onoma:"がたん ごとん！",      sound:"train",   word:"みどりの でんしゃ。れーるの うえを はしるよ。" },
+  { id:"shinkansen", name:"しんかんせん",       emoji:"🚄", onoma:"びゅーん！",            sound:"whoosh",  word:"とっても はやい しんかんせん。びゅーんと とおくまで いくよ。" },
+  { id:"kikansha",   name:"きかんしゃ",         emoji:"🚂", onoma:"しゅっ しゅっ ぽー！",  sound:"steam",   word:"くろい きかんしゃ。けむりを もくもく だして はしるよ。" },
+  { id:"monorail",   name:"ものれーる",         emoji:"🚝", onoma:"すいー っ！",          sound:"motor",   word:"そらを はしる ものれーる。まちが よく みえるよ。" },
+  { id:"heli",       name:"へりこぷたー",       emoji:"🚁", onoma:"ばたばた ばたばた！",  sound:"rotor",   word:"くるくる まわる へりこぷたー。そらを とぶよ。" },
+  { id:"hikouki",    name:"ひこうき",           emoji:"✈️", onoma:"ごー ーっ！",          sound:"jet",     word:"おおきな ひこうき。くもの うえまで とんでいくよ。" },
+  { id:"fune",       name:"ふね",               emoji:"⛴️", onoma:"ぼぼ ぼー！",          sound:"shiphorn",word:"おおきな ふね。うみの うえを ゆっくり すすむよ。" },
+  { id:"rocket",     name:"ろけっと",           emoji:"🚀", onoma:"ごー ぴゅーん！",      sound:"rocket",  word:"そらたかく とぶ ろけっと。おほしさままで いけるかな。" }
+];
+
+const vById = Object.fromEntries(VEHICLES.map(v => [v.id, v]));
+
+/**
+ * {name} さしこみしき おはなし（30話いじょう）。
+ * v: しゅやくの のりもの id。short=みじかいの(3〜4ぶん)、long=ながいの(5〜8ぶん)。
+ * よみあげ じ に {name} を おこさんの なまえに さしかえる。
+ */
+const STORIES = [
+  { id:1, v:"shoubou", short:[
+      "きょうは ぶーぶーランドの おまつり。",
+      "{name}は あかい しょうぼうしゃに のったよ。",
+      "うー うー、ゆっくり まちを はしるよ。",
+      "みんなが てを ふってくれたね。"
+    ], long:[
+      "きょうは ぶーぶーランドの たのしい おまつり。",
+      "{name}は ぴかぴかの しょうぼうしゃに のせてもらったよ。",
+      "うー うー、らんぷが きらきら ひかるね。",
+      "しょうぼうしゃは ゆっくり ゆっくり まちを はしるよ。",
+      "みちの みんなが にこにこ てを ふってくれた。",
+      "{name}も おおきく てを ふりかえしたよ。",
+      "「かっこよかったね」と しょうぼうしゃが いったよ。"
+    ] },
+
+  { id:2, v:"shovel", short:[
+      "すなばで {name}は しょべるかーと あそぶよ。",
+      "がりがり、つちを ざくざく ほるよ。",
+      "おおきな あなが できたね。",
+      "「じょうずだね」と しょべるかーが わらったよ。"
+    ], long:[
+      "はれた ひ、{name}は すなばへ いったよ。",
+      "そこには ちいさな しょべるかーが まっていた。",
+      "「いっしょに ほろう」と しょべるかーが いったよ。",
+      "がりがり ざくざく、つちを すくうよ。",
+      "{name}も しゃべるで うんとこしょ。",
+      "おおきな あなが できあがったね。",
+      "おひさまが ぽかぽか、きもちが いいね。",
+      "「また あそぼうね」と てを ふったよ。"
+    ] },
+
+  { id:3, v:"gomi", short:[
+      "あさ、ごみしゅうしゅうしゃが やってきた。",
+      "{name}は おてつだいで ごみを わたすよ。",
+      "うぃーん がしゃ、ごみを ぱくっと たべたよ。",
+      "まちが ぴかぴかに なったね。"
+    ], long:[
+      "あさ はやく、ごみしゅうしゅうしゃが やってきたよ。",
+      "{name}は おそろいの ぼうしを かぶって おてつだい。",
+      "「ごみを わたすね」と {name}が いったよ。",
+      "うぃーん がしゃ、ごみを ぱくっと たべるよ。",
+      "くるまは ゆっくり つぎの おうちへ すすむ。",
+      "みちが だんだん きれいに なっていくね。",
+      "「ありがとう、たすかったよ」と うんてんしゅさん。",
+      "{name}は うれしくて にこにこ わらったよ。"
+    ] },
+
+  { id:4, v:"densha", short:[
+      "{name}は でんしゃに のって おでかけ。",
+      "がたん ごとん、まどから おやまが みえるよ。",
+      "とんねるを くぐると まっくら、そして ぱっ。",
+      "「たのしいね」と {name}が わらったよ。"
+    ], long:[
+      "きょうは でんしゃで おでかけ する ひ。",
+      "{name}は まどの そばの せきに すわったよ。",
+      "がたん ごとん、でんしゃが はしりだす。",
+      "まどの そとには みどりの おやまや かわ。",
+      "とんねるに はいると まっくら、どきどき。",
+      "とんねるを でると ぱっと あかるく なったね。",
+      "うしさんや はたけも みえてきたよ。",
+      "「でんしゃって たのしいね」と {name}は にっこり。"
+    ] },
+
+  { id:5, v:"crane", short:[
+      "こうじげんばで くれーんしゃが まっていた。",
+      "{name}と いっしょに おおきな つみきを もちあげるよ。",
+      "ぐいーん、そらたかく あがっていく。",
+      "ぴたっと うまく つめたね。"
+    ], long:[
+      "こうじげんばに たかーい くれーんしゃが いたよ。",
+      "「おおきな つみきを はこぶよ」と くれーんしゃ。",
+      "{name}も いっしょに よいしょと あいず。",
+      "ぐいーん ぐいーん、つみきが あがっていく。",
+      "そらの ちかくまで たかく のぼったよ。",
+      "そして ぴたっと、ちょうど いいところに おいた。",
+      "「すごい、ぴったりだね」と {name}が はくしゅ。",
+      "くれーんしゃも うれしそうに ゆれたよ。"
+    ] },
+
+  { id:6, v:"patokaa", short:[
+      "{name}は おまわりさんと ぱとかーに のったよ。",
+      "ぴーぽー、まちを ぐるりと みまわるよ。",
+      "みんな げんきかな、と のぞいていく。",
+      "「きょうも へいわだね」と わらったよ。"
+    ], long:[
+      "きょうは ぱとかーで まちを みまわる ひ。",
+      "{name}は おまわりさんの となりに のったよ。",
+      "ぴーぽー ぴーぽー、らんぷが くるくる。",
+      "こうえんでは こどもたちが あそんでいる。",
+      "おみせの まえでは ねこが ひなたぼっこ。",
+      "「みんな げんきだね」と {name}が いったよ。",
+      "ぱとかーは ゆっくり まちを まわっていく。",
+      "「きょうも へいわで よかったね」と にっこり。"
+    ] },
+
+  { id:7, v:"dump", short:[
+      "だんぷかーが すなを はこんできたよ。",
+      "{name}は おおきな おやまを つくるんだ。",
+      "ざあーっ、すなが いっぱい でてきた。",
+      "りっぱな すなやまが できたね。"
+    ], long:[
+      "きょうは だんぷかーと すなやまづくり。",
+      "ぶろろろ、だんぷかーが すなを はこんできたよ。",
+      "「どこに おろす?」と だんぷかーが きいた。",
+      "「ここに おねがい」と {name}が ゆびさす。",
+      "ざあーっ、すなが やまみたいに でてきた。",
+      "{name}は てで ぺたぺた かたちを ととのえる。",
+      "おおきくて まるい すなやまの できあがり。",
+      "「すてきな やまだね」と だんぷかーが わらったよ。"
+    ] },
+
+  { id:8, v:"heli", short:[
+      "{name}は へりこぷたーに のったよ。",
+      "ばたばた、そらへ ふわっと のぼるよ。",
+      "うえから みると おうちが ちいさいね。",
+      "「たかいねえ」と {name}が おおよろこび。"
+    ], long:[
+      "きょうは へりこぷたーで そらの たびへ。",
+      "{name}は しーとべるとを かちっと しめたよ。",
+      "ばたばた ばたばた、ぷろぺらが まわる。",
+      "ふわっと、へりこぷたーが そらへ のぼるよ。",
+      "したを みると おうちが ちいさく みえる。",
+      "かわや こうえんも みんな ちいさいね。",
+      "「とりさんと おなじだね」と {name}が わらう。",
+      "そらの たびは とっても きもちが よかったよ。"
+    ] },
+
+  { id:9, v:"bus", short:[
+      "{name}は ばすに のって どうぶつえんへ。",
+      "ぶっ ぶー、しゅっぱつ しんこう。",
+      "ぞうさんや きりんさんに あえるかな。",
+      "「わくわくするね」と {name}が いったよ。"
+    ], long:[
+      "きょうは ばすに のって どうぶつえんへ いくよ。",
+      "{name}は まどぎわの せきに すわったよ。",
+      "ぶっ ぶー、ばすが ゆっくり はしりだす。",
+      "「つぎは どうぶつえん まえ」と あなうんす。",
+      "ばすを おりると おおきな もんが みえた。",
+      "ぞうさんが はなを ぶらぶら、おおきいね。",
+      "きりんさんは くびが とっても ながいよ。",
+      "「ばすで これて よかったね」と {name}は にっこり。"
+    ] },
+
+  { id:10, v:"shinkansen", short:[
+      "{name}は しんかんせんに のったよ。",
+      "びゅーん、まどの けしきが ながれていく。",
+      "おべんとうを ぱくぱく、おいしいね。",
+      "「はやいねえ」と {name}が びっくり。"
+    ], long:[
+      "きょうは しんかんせんで おじいちゃんちへ。",
+      "{name}は はなの ながい しんかんせんに のったよ。",
+      "びゅーん、すごい はやさで はしりだす。",
+      "まどの けしきが しゅーっと ながれていく。",
+      "とちゅうで おべんとうを ぱくぱく たべたよ。",
+      "「もうすぐ つくよ」と おかあさんが いった。",
+      "えきには おじいちゃんが まっていてくれた。",
+      "「はやくて たのしかったね」と {name}は にっこり。"
+    ] },
+
+  { id:11, v:"kyuukyuu", short:[
+      "くまさんが おなかが いたいんだって。",
+      "{name}と きゅうきゅうしゃで びょういんへ いくよ。",
+      "ぴーぽー、やさしく ゆっくり はこぶよ。",
+      "おいしゃさんに みてもらって あんしんだね。"
+    ], long:[
+      "ぶーぶーランドの くまさんが おなかが いたいみたい。",
+      "「だいじょうぶ?」と {name}が こえを かけたよ。",
+      "きゅうきゅうしゃが やさしく やってきた。",
+      "ぴーぽー ぴーぽー、ゆっくり びょういんへ。",
+      "{name}は くまさんの てを にぎってあげたよ。",
+      "おいしゃさんが やさしく みてくれたね。",
+      "「もう だいじょうぶだよ」と おいしゃさん。",
+      "くまさんも {name}も にこっと わらったよ。"
+    ] },
+
+  { id:12, v:"fune", short:[
+      "{name}は ふねに のって うみへ でたよ。",
+      "ぼぼ ぼー、ゆらゆら すすむよ。",
+      "おさかなが ぴょんと はねたね。",
+      "「きもちいいね」と {name}が わらったよ。"
+    ], long:[
+      "あおい うみへ、{name}は ふねに のったよ。",
+      "ぼぼ ぼー、おおきな きてきが なったね。",
+      "ふねは ゆらゆら、なみの うえを すすむ。",
+      "とおくに しろい かもめが とんでいる。",
+      "うみの なかから おさかなが ぴょん!",
+      "「みて、おさかなだよ」と {name}が ゆびさす。",
+      "おひさまで うみが きらきら ひかるね。",
+      "「ふねって きもちいいね」と {name}は にっこり。"
+    ] },
+
+  { id:13, v:"taxi", short:[
+      "あめの ひ、{name}は たくしーに のったよ。",
+      "ぷっ ぷー、まちを ゆっくり はしるよ。",
+      "まどの あめが つーっと ながれる。",
+      "あったかい たくしーで あんしんだね。"
+    ], long:[
+      "ぽつぽつ あめの ふる ひ、たくしーが きたよ。",
+      "{name}は ぴょんと たくしーに のりこんだ。",
+      "ぷっ ぷー、たくしーが はしりだす。",
+      "まどの あめが つーっと ながれていくね。",
+      "かさを さした ひとが てを ふってくれた。",
+      "「もうすぐ つくよ」と うんてんしゅさん。",
+      "おうちの まえで たくしーは とまったよ。",
+      "「ありがとう」と {name}は ぺこりと おじぎ。"
+    ] },
+
+  { id:14, v:"kikansha", short:[
+      "{name}は きかんしゃに のったよ。",
+      "しゅっ しゅっ ぽー、けむりが もくもく。",
+      "とんねるを くぐって やまを こえるよ。",
+      "「たのしいね」と {name}が わらったよ。"
+    ], long:[
+      "きょうは くろい きかんしゃの たび。",
+      "{name}は こっとんと せきに すわったよ。",
+      "しゅっ しゅっ、おおきな しゃりんが まわる。",
+      "ぽー! と きてきが げんきに なったね。",
+      "けむりが もくもく、そらへ のぼっていく。",
+      "とんねるを くぐると ひんやり すずしいよ。",
+      "やまを こえると みどりの はたけが みえた。",
+      "「きかんしゃ だいすき」と {name}は にっこり。"
+    ] },
+
+  { id:15, v:"hikouki", short:[
+      "{name}は ひこうきに のったよ。",
+      "ごーっ、ぐんぐん そらへ のぼるよ。",
+      "くもの うえは まっしろ ふわふわ。",
+      "「わたあめみたい」と {name}が わらったよ。"
+    ], long:[
+      "きょうは ひこうきで とおくへ いく ひ。",
+      "{name}は まどの そばに すわったよ。",
+      "ごーっ、ひこうきが ぐんぐん はしる。",
+      "ふわっと、そらへ まいあがったね。",
+      "したには まちが ちいさく みえるよ。",
+      "もっと たかく のぼると くもの うえ。",
+      "くもは まっしろで ふわふわ、わたあめみたい。",
+      "「そらの たびは すてきだね」と {name}は にっこり。"
+    ] },
+
+  { id:16, v:"rocket", short:[
+      "よるの ぶーぶーランド、ろけっとが まっていた。",
+      "{name}と いっしょに おほしさまへ しゅっぱつ。",
+      "ごー ぴゅーん、そらへ とんでいくよ。",
+      "おほしさまが きらきら ちかくに みえたね。"
+    ], long:[
+      "ほしの きれいな よる、ろけっとが やってきた。",
+      "「おほしさままで いってみる?」と ろけっと。",
+      "{name}は どきどき しながら のりこんだよ。",
+      "ごー ぴゅーん、ろけっとが そらへ とんでいく。",
+      "まどの そとには きらきらの おほしさま。",
+      "おつきさまも にっこり わらっているね。",
+      "ほしたちの あいだを ゆっくり すすんだよ。",
+      "「ゆめみたいだね」と {name}は うっとり わらった。"
+    ] },
+
+  { id:17, v:"truck", short:[
+      "{name}は とらっくで おにもつを はこぶよ。",
+      "ぶーん、はこを いっぱい のせて しゅっぱつ。",
+      "おともだちの おうちへ とどけにいくよ。",
+      "「ありがとう」と みんなが よろこんだね。"
+    ], long:[
+      "きょうは とらっくで おにもつ はこびの おてつだい。",
+      "{name}は ちいさな はこを よいしょと のせたよ。",
+      "ぶーん ぶーん、とらっくが はしりだす。",
+      "さいしょは うさぎさんの おうちへ。",
+      "つぎは りすさんの おうちへ とどけたよ。",
+      "「まってたよ、ありがとう」と みんな にこにこ。",
+      "ぜんぶ とどけて、はこは からっぽに なったね。",
+      "「おてつだい たのしかった」と {name}は にっこり。"
+    ] },
+
+  { id:18, v:"monorail", short:[
+      "{name}は ものれーるに のったよ。",
+      "すいー っ、そらの ちかくを はしるよ。",
+      "まちぜんたいが よく みえるね。",
+      "「たかくて すてき」と {name}が わらったよ。"
+    ], long:[
+      "きょうは そらを はしる ものれーるの たび。",
+      "{name}は いちばん まえの せきに すわったよ。",
+      "すいー っ、しずかに はしりだす。",
+      "れーるは そらの たかいところを とおるよ。",
+      "まちの おうちや こうえんが よく みえる。",
+      "とおくには あおい うみも みえてきたね。",
+      "「ぜんぶ みえて たのしいね」と {name}。",
+      "ものれーるは すいすい すすんでいったよ。"
+    ] },
+
+  { id:19, v:"shoubou", short:[
+      "きの うえで こねこが おりられないよ。",
+      "{name}と しょうぼうしゃの はしごで たすけにいくよ。",
+      "ぐいーん、はしごが のびていく。",
+      "こねこを そっと だっこ できたね。"
+    ], long:[
+      "たかい きの うえで こねこが ないているよ。",
+      "「だいじょうぶ、たすけてあげる」と {name}。",
+      "はしごの ついた しょうぼうしゃが やってきた。",
+      "ぐいーん、はしごが きの うえまで のびていく。",
+      "{name}は やさしく こねこに てを のばすよ。",
+      "こねこを そっと だっこ できたね。",
+      "「にゃあ」と こねこが ありがとうを いった。",
+      "みんなで にっこり、よかったね。"
+    ] },
+
+  { id:20, v:"shovel", short:[
+      "はたけで しょべるかーが つちを たがやすよ。",
+      "{name}も いっしょに ざくざく ほるよ。",
+      "ふかふかの つちが できたね。",
+      "「おはなを うえようね」と わらったよ。"
+    ], long:[
+      "はるの はたけで しょべるかーが まっていた。",
+      "「おはなの たねを うえる じゅんびだよ」と いう。",
+      "がりがり ざくざく、つちを たがやすよ。",
+      "{name}も ちいさな すこっぷで おてつだい。",
+      "つちが ふかふかに なってきたね。",
+      "そこへ いろんな たねを ぱらぱら まいたよ。",
+      "「みずを あげようね」と {name}が じょうろを もつ。",
+      "「はなが さくのが たのしみだね」と にっこり。"
+    ] },
+
+  { id:21, v:"bus", short:[
+      "{name}は おともだちと ばすに のったよ。",
+      "ぶっ ぶー、みんなで おうたを うたうよ。",
+      "まどの けしきが ながれて たのしいね。",
+      "「また のろうね」と わらったよ。"
+    ], long:[
+      "きょうは おともだちと ばすで おでかけ。",
+      "{name}は まんなかの せきに すわったよ。",
+      "ぶっ ぶー、ばすが げんきに はしりだす。",
+      "「おうた うたおう」と みんなで うたうよ。",
+      "まどの そとの けしきが ながれていくね。",
+      "うんてんしゅさんも にこにこ きいてくれた。",
+      "あっというまに もくてきちに ついたよ。",
+      "「ばす たのしかったね、また のろうね」。"
+    ] },
+
+  { id:22, v:"densha", short:[
+      "よるの でんしゃに {name}は のったよ。",
+      "がたん ごとん、まどに おほしさま。",
+      "まちの あかりが きらきら ながれる。",
+      "「きれいだね」と {name}が わらったよ。"
+    ], long:[
+      "ひが くれて、よるの でんしゃに のったよ。",
+      "{name}は まどに おでこを くっつけて みる。",
+      "がたん ごとん、でんしゃが しずかに はしる。",
+      "まどの そとには おほしさまが きらきら。",
+      "まちの あかりも たくさん ながれていくね。",
+      "とおくの たてものも ぴかぴか ひかってる。",
+      "「よるの けしきって きれいだね」と {name}。",
+      "ぽかぽか あったかい でんしゃで にっこり。"
+    ] },
+
+  { id:23, v:"crane", short:[
+      "こどもの ひ、くれーんしゃが やってきた。",
+      "{name}と おおきな こいのぼりを あげるよ。",
+      "ぐいーん、そらたかく あがっていく。",
+      "こいのぼりが かぜに およいだね。"
+    ], long:[
+      "きょうは こどもの ひ、たのしい おまつり。",
+      "おおきな こいのぼりを あげる じゅんびだよ。",
+      "「てつだうよ」と くれーんしゃが やってきた。",
+      "{name}も よいしょと あいずを だすよ。",
+      "ぐいーん ぐいーん、こいのぼりが あがっていく。",
+      "そらたかく、げんきに およぎはじめたね。",
+      "あかや あおの こいのぼりが かぜに ゆれる。",
+      "「すてきだね」と {name}は うえを みあげた。"
+    ] },
+
+  { id:24, v:"gomi", short:[
+      "あきの こうえん、おちばが いっぱい。",
+      "{name}と ごみしゅうしゅうしゃで おそうじ するよ。",
+      "うぃーん、おちばを ぱくぱく あつめる。",
+      "こうえんが きれいに なったね。"
+    ], long:[
+      "あきの こうえんは おちばで まっか きいろ。",
+      "「おそうじ しようか」と {name}が いったよ。",
+      "ごみしゅうしゅうしゃが げんきに やってきた。",
+      "{name}は おちばを ほうきで あつめるよ。",
+      "うぃーん がしゃ、おちばを ぱくぱく すいこむ。",
+      "こうえんが だんだん きれいに なっていくね。",
+      "「ありがとう、ぴかぴかだね」と くるまが いう。",
+      "{name}は にこにこ、いい きもちに なったよ。"
+    ] },
+
+  { id:25, v:"patokaa", short:[
+      "まいごの わんちゃんを みつけたよ。",
+      "{name}と ぱとかーで おうちまで おくるよ。",
+      "ぴーぽー、ゆっくり はしっていく。",
+      "わんちゃんが おうちに かえれて よかったね。"
+    ], long:[
+      "こうえんで まいごの わんちゃんが ないていた。",
+      "「おうちは どこかな?」と {name}が きいたよ。",
+      "ぱとかーが やさしく やってきてくれた。",
+      "わんちゃんを そっと のせて、しゅっぱつ。",
+      "ぴーぽー、まちを ゆっくり はしっていく。",
+      "「ここが おうちだ!」と {name}が ゆびさす。",
+      "かいぬしさんが「ありがとう」と おおよろこび。",
+      "わんちゃんも しっぽを ふって うれしそう。"
+    ] },
+
+  { id:26, v:"heli", short:[
+      "あめが やんで にじが でたよ。",
+      "{name}は へりこぷたーで にじを みにいくよ。",
+      "ばたばた、にじの ちかくまで とぶよ。",
+      "「おおきな にじだね」と わらったよ。"
+    ], long:[
+      "あめが やんだ そら、おおきな にじが でたよ。",
+      "「にじを ちかくで みたいな」と {name}。",
+      "へりこぷたーが「いこう!」と やってきた。",
+      "ばたばた ばたばた、そらへ のぼっていく。",
+      "にじは あか だいだい きいろ みどり…。",
+      "ななついろの にじが きらきら かがやくね。",
+      "「こんなに おおきいんだね」と {name}が びっくり。",
+      "へりこぷたーと にじの たびは たのしかったよ。"
+    ] },
+
+  { id:27, v:"dump", short:[
+      "うみべで {name}は すなの おしろを つくるよ。",
+      "だんぷかーが すなを はこんできた。",
+      "ざあーっ、すなで たかい とうを つくるよ。",
+      "りっぱな おしろが できたね。"
+    ], long:[
+      "うみべの すなはまで おしろづくり。",
+      "「すなを はこんでくるね」と だんぷかー。",
+      "ぶろろろ、すなを いっぱい のせてきたよ。",
+      "ざあーっ、{name}の まえに すなが やまもり。",
+      "ばけつで かたちを つくって、ぺたぺた。",
+      "たかい とうや まるい かべが できてきた。",
+      "おおきな すなの おしろの できあがり!",
+      "「すごいね」と だんぷかーが はくしゅしたよ。"
+    ] },
+
+  { id:28, v:"shinkansen", short:[
+      "{name}は ゆきの まちへ しんかんせんで いくよ。",
+      "びゅーん、まどの そとは まっしろ。",
+      "ゆきだるまが いっぱい みえたね。",
+      "「ゆきだ!」と {name}が おおよろこび。"
+    ], long:[
+      "きょうは ゆきの まちへ おでかけ。",
+      "{name}は しんかんせんの せきに すわったよ。",
+      "びゅーん、はやさで けしきが ながれていく。",
+      "まどの そとが だんだん まっしろに なってきた。",
+      "やまも おうちも ゆきで ふわふわ。",
+      "ゆきだるまが いくつも みえたよ。",
+      "「ゆきあそび しようね」と {name}が わくわく。",
+      "えきに つくと ゆきが しんしん ふっていたよ。"
+    ] },
+
+  { id:29, v:"fune", short:[
+      "みなとで ふねの おまつりだよ。",
+      "{name}は ふねに のって うみを いっしゅう。",
+      "ぼぼ ぼー、はたが ひらひら なびくよ。",
+      "「たのしい おまつりだね」と わらったよ。"
+    ], long:[
+      "みなとは ふねの おまつりで にぎやか。",
+      "{name}は おおきな ふねに のせてもらったよ。",
+      "ぼぼ ぼー、きてきが げんきに なったね。",
+      "ふねには いろんな はたが ひらひら。",
+      "うみの うえを ぐるりと いっしゅう するよ。",
+      "ほかの ふねも てを ふってくれた。",
+      "そらには はなびじゃなくて かもめが まう。",
+      "「すてきな おまつりだね」と {name}は にっこり。"
+    ] },
+
+  { id:30, v:"kikansha", short:[
+      "はるの のはらを きかんしゃが はしるよ。",
+      "{name}は おはなばたけを みにいくんだ。",
+      "しゅっ しゅっ ぽー、げんきに すすむよ。",
+      "いちめんの おはなに「きれい!」と わらったよ。"
+    ], long:[
+      "はるの あたたかい ひ、きかんしゃの たび。",
+      "{name}は まどから のはらを ながめるよ。",
+      "しゅっ しゅっ、しゃりんが ことこと まわる。",
+      "ぽー! と きてきが はるの そらに ひびく。",
+      "まどの そとは いちめんの おはなばたけ。",
+      "あかや きいろの おはなが ゆれているね。",
+      "ちょうちょも ひらひら とんでいるよ。",
+      "「はるって きれいだね」と {name}は うっとり。"
+    ] },
+
+  { id:31, v:"hikouki", short:[
+      "{name}は ひこうきで おばあちゃんちへ。",
+      "ごーっ、くもの うえを とんでいくよ。",
+      "したには うみが きらきら みえる。",
+      "おばあちゃんが まっててくれて うれしいね。"
+    ], long:[
+      "きょうは おばあちゃんに あいに いく ひ。",
+      "{name}は ひこうきの まどぎわに すわったよ。",
+      "ごーっ、ひこうきが そらへ のぼっていく。",
+      "くもの うえは まっしろで ふわふわ。",
+      "したを みると うみが きらきら ひかるね。",
+      "「もうすぐ つくよ」と おかあさんが いった。",
+      "くうこうには おばあちゃんが まっていた。",
+      "「あえて うれしいね」と {name}は にっこり。"
+    ] },
+
+  { id:32, v:"taxi", short:[
+      "{name}は たくしーで おかいものへ いくよ。",
+      "ぷっ ぷー、まちを すいすい はしるよ。",
+      "おおきな おみせに ついたね。",
+      "「なにを かおうかな」と わくわく。"
+    ], long:[
+      "きょうは おかいものへ おでかけ する ひ。",
+      "{name}は たくしーを よんで のりこんだよ。",
+      "ぷっ ぷー、たくしーが はしりだす。",
+      "まどの そとの おみせが ながれていくね。",
+      "「もうすぐ つくよ」と うんてんしゅさん。",
+      "おおきな おみせの まえで とまったよ。",
+      "「ありがとう」と {name}は ぺこり おじぎ。",
+      "「なにを かおうかな」と わくわく したよ。"
+    ] }
+];
+
+/* ----------------------- 効果音タイプ（Web Audio 合成パラメータ） ----------------------- */
+/*
+ * SOUND_PARAMS: 効果音タイプごとの 合成パラメータ。
+ * playSound() が これを よんで オシレーター/ノイズで おとを つくる。
+ * 自動再生は できないので 最初の タップで AudioContext を unlock してから つかう。
+ */
+const SOUND_PARAMS = {
+  siren:    { kind:"siren",  f1:740, f2:480, segs:4, segDur:0.34, type:"sawtooth", gain:0.16 },
+  engine:   { kind:"engine", base:70, dur:1.4, gain:0.20 },
+  motor:    { kind:"motor",  base:180, dur:1.2, gain:0.14 },
+  dig:      { kind:"dig",    bursts:5, dur:1.2, gain:0.22 },
+  horn:     { kind:"horn",   f:420, beeps:2, beepDur:0.22, type:"square", gain:0.16 },
+  train:    { kind:"train",  thumps:6, dur:1.6, gain:0.22 },
+  whoosh:   { kind:"whoosh", dur:1.1, gain:0.18 },
+  steam:    { kind:"steam",  chuffs:4, dur:1.6, gain:0.20 },
+  rotor:    { kind:"rotor",  rate:14, dur:1.5, gain:0.18 },
+  jet:      { kind:"jet",    dur:1.6, gain:0.16 },
+  shiphorn: { kind:"shiphorn", f:150, dur:1.4, gain:0.20 },
+  rocket:   { kind:"rocket", dur:1.8, gain:0.18 }
+};
+
+/* ============================== じょうたい ============================== */
+const STORE = {
+  name:    "buubuu.name",
+  garage:  "buubuu.garage",
+  read:    "buubuu.readStories"
+};
+
+const State = {
+  name: localStorage.getItem(STORE.name) || "",
+  garage: loadSet(STORE.garage),
+  read: loadSet(STORE.read),
+  audioReady: false,
+  jaVoice: null,
+  m1: null,   // げんざいの のりもの(これなあに)
+  m2: null,   // げんざいの のりもの(おとまね)
+  storyLen: "short",
+  story: null
+};
+
+function loadSet(key){
+  try{ return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
+  catch(e){ return new Set(); }
+}
+function saveSet(key,set){
+  try{ localStorage.setItem(key, JSON.stringify([...set])); }catch(e){}
+}
+
+/* ============================== 音声（Web Speech） ============================== */
+let audioCtx = null;
+
+function pickJaVoice(){
+  const voices = speechSynthesis.getVoices() || [];
+  // にほんごの こえを ゆうせん（Kyoko/O-ren/Otoya など）
+  const ja = voices.filter(v => /ja(-|_)?JP/i.test(v.lang) || /Japanese|日本語/i.test(v.name));
+  State.jaVoice = ja.find(v => /Kyoko|O-ren|Otoya|Hattori|Sangeeta|Google/i.test(v.name)) || ja[0] || null;
+}
+if ("speechSynthesis" in window){
+  pickJaVoice();
+  speechSynthesis.onvoiceschanged = pickJaVoice;
+}
+
+/** よみあげる。やさしい こえ・やや おそめ で こてい。 */
+function speak(text){
+  if (!("speechSynthesis" in window) || !text) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    u.rate = 0.82;   // やや おそめ
+    u.pitch = 1.15;  // やさしい たかさ
+    u.volume = 1.0;
+    if (State.jaVoice) u.voice = State.jaVoice;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/** iOS たいさく：さいしょの タップで 音声合成と Web Audio を unlock する。 */
+function unlockAudio(){
+  if (State.audioReady) return;
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC){
+      audioCtx = new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      // むおんの ちいさな おとで unlock
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      g.gain.value = 0.0001;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + 0.02);
+    }
+  }catch(e){}
+  try{
+    // SpeechSynthesis も いちど からの はつわで unlock
+    const warm = new SpeechSynthesisUtterance(" ");
+    warm.volume = 0; warm.lang = "ja-JP";
+    speechSynthesis.speak(warm);
+    pickJaVoice();
+  }catch(e){}
+  State.audioReady = true;
+}
+
+/* ============================== Web Audio 効果音 ============================== */
+function noiseBuffer(seconds){
+  const len = Math.floor(audioCtx.sampleRate * seconds);
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = Math.random()*2 - 1;
+  return buf;
+}
+
+/** 効果音タイプを Web Audio で 合成して ならす。 */
+function playSound(soundType){
+  if (!audioCtx) return;
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  const p = SOUND_PARAMS[soundType];
+  if (!p) return;
+  const now = audioCtx.currentTime;
+  const out = audioCtx.createGain();
+  out.gain.value = p.gain || 0.15;
+  out.connect(audioCtx.destination);
+
+  switch (p.kind){
+    case "siren": {
+      const osc = audioCtx.createOscillator();
+      osc.type = p.type;
+      const g = audioCtx.createGain(); g.gain.value = 1;
+      osc.connect(g); g.connect(out);
+      let t = now;
+      for (let i=0;i<p.segs;i++){
+        osc.frequency.setValueAtTime(p.f1, t);
+        osc.frequency.linearRampToValueAtTime(p.f2, t + p.segDur*0.5);
+        osc.frequency.linearRampToValueAtTime(p.f1, t + p.segDur);
+        t += p.segDur;
+      }
+      osc.start(now); osc.stop(t + 0.02);
+      break;
+    }
+    case "engine": {
+      const osc = audioCtx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(p.base, now);
+      osc.frequency.linearRampToValueAtTime(p.base*1.6, now + p.dur*0.4);
+      osc.frequency.linearRampToValueAtTime(p.base*1.2, now + p.dur);
+      const lfo = audioCtx.createOscillator(); lfo.frequency.value = 18;
+      const lg = audioCtx.createGain(); lg.gain.value = 14;
+      lfo.connect(lg); lg.connect(osc.frequency);
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(1, now + 0.08);
+      g.gain.setValueAtTime(1, now + p.dur - 0.2);
+      g.gain.linearRampToValueAtTime(0, now + p.dur);
+      osc.connect(g); g.connect(out);
+      osc.start(now); lfo.start(now);
+      osc.stop(now + p.dur); lfo.stop(now + p.dur);
+      break;
+    }
+    case "motor": {
+      const osc = audioCtx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(p.base, now);
+      osc.frequency.linearRampToValueAtTime(p.base*1.3, now + p.dur);
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(1, now + 0.1);
+      g.gain.linearRampToValueAtTime(0, now + p.dur);
+      osc.connect(g); g.connect(out);
+      osc.start(now); osc.stop(now + p.dur);
+      break;
+    }
+    case "dig": {
+      const seg = p.dur / p.bursts;
+      for (let i=0;i<p.bursts;i++){
+        const t = now + i*seg;
+        const src = audioCtx.createBufferSource();
+        src.buffer = noiseBuffer(seg*0.6);
+        const bp = audioCtx.createBiquadFilter();
+        bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = 0.7;
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(1, t + 0.02);
+        g.gain.linearRampToValueAtTime(0, t + seg*0.6);
+        src.connect(bp); bp.connect(g); g.connect(out);
+        src.start(t); src.stop(t + seg*0.6);
+      }
+      break;
+    }
+    case "horn": {
+      for (let i=0;i<p.beeps;i++){
+        const t = now + i*(p.beepDur+0.1);
+        const osc = audioCtx.createOscillator();
+        osc.type = p.type; osc.frequency.value = p.f;
+        const osc2 = audioCtx.createOscillator();
+        osc2.type = p.type; osc2.frequency.value = p.f*1.5;
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(1, t + 0.02);
+        g.gain.setValueAtTime(1, t + p.beepDur - 0.04);
+        g.gain.linearRampToValueAtTime(0, t + p.beepDur);
+        osc.connect(g); osc2.connect(g); g.connect(out);
+        osc.start(t); osc2.start(t); osc.stop(t + p.beepDur); osc2.stop(t + p.beepDur);
+      }
+      break;
+    }
+    case "train": {
+      const seg = p.dur / p.thumps;
+      for (let i=0;i<p.thumps;i++){
+        const t = now + i*seg;
+        const osc = audioCtx.createOscillator();
+        osc.type = "sine"; osc.frequency.setValueAtTime(120, t);
+        osc.frequency.linearRampToValueAtTime(60, t + seg*0.5);
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.9, t + 0.02);
+        g.gain.linearRampToValueAtTime(0, t + seg*0.5);
+        osc.connect(g); g.connect(out);
+        osc.start(t); osc.stop(t + seg*0.5);
+      }
+      break;
+    }
+    case "whoosh": {
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuffer(p.dur);
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = "bandpass"; bp.Q.value = 1.2;
+      bp.frequency.setValueAtTime(400, now);
+      bp.frequency.linearRampToValueAtTime(3500, now + p.dur*0.5);
+      bp.frequency.linearRampToValueAtTime(500, now + p.dur);
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(1, now + p.dur*0.4);
+      g.gain.linearRampToValueAtTime(0, now + p.dur);
+      src.connect(bp); bp.connect(g); g.connect(out);
+      src.start(now); src.stop(now + p.dur);
+      break;
+    }
+    case "steam": {
+      const seg = p.dur / p.chuffs;
+      for (let i=0;i<p.chuffs;i++){
+        const t = now + i*seg;
+        const src = audioCtx.createBufferSource();
+        src.buffer = noiseBuffer(seg*0.5);
+        const hp = audioCtx.createBiquadFilter();
+        hp.type = "highpass"; hp.frequency.value = 1200;
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.8, t + 0.03);
+        g.gain.linearRampToValueAtTime(0, t + seg*0.5);
+        src.connect(hp); hp.connect(g); g.connect(out);
+        src.start(t); src.stop(t + seg*0.5);
+      }
+      // さいごに きてき
+      const osc = audioCtx.createOscillator();
+      osc.type = "sine"; osc.frequency.value = 520;
+      const og = audioCtx.createGain();
+      const tt = now + p.dur - 0.3;
+      og.gain.setValueAtTime(0, tt);
+      og.gain.linearRampToValueAtTime(0.9, tt + 0.05);
+      og.gain.linearRampToValueAtTime(0, tt + 0.3);
+      osc.connect(og); og.connect(out);
+      osc.start(tt); osc.stop(tt + 0.3);
+      break;
+    }
+    case "rotor": {
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuffer(p.dur); src.loop = true;
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = "lowpass"; lp.frequency.value = 800;
+      const g = audioCtx.createGain(); g.gain.value = 0;
+      // チョップ（はやい おんりょう へんか）
+      const lfo = audioCtx.createOscillator();
+      lfo.type = "square"; lfo.frequency.value = p.rate;
+      const lg = audioCtx.createGain(); lg.gain.value = 0.5;
+      lfo.connect(lg); lg.connect(g.gain);
+      g.gain.setValueAtTime(0.5, now);
+      src.connect(lp); lp.connect(g); g.connect(out);
+      src.start(now); lfo.start(now);
+      src.stop(now + p.dur); lfo.stop(now + p.dur);
+      break;
+    }
+    case "jet": {
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuffer(p.dur);
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.setValueAtTime(300, now);
+      lp.frequency.linearRampToValueAtTime(4000, now + p.dur*0.6);
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(1, now + p.dur*0.5);
+      g.gain.linearRampToValueAtTime(0, now + p.dur);
+      src.connect(lp); lp.connect(g); g.connect(out);
+      src.start(now); src.stop(now + p.dur);
+      break;
+    }
+    case "shiphorn": {
+      const osc = audioCtx.createOscillator();
+      osc.type = "sawtooth"; osc.frequency.value = p.f;
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = "sine"; osc2.frequency.value = p.f*1.01;
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = "lowpass"; lp.frequency.value = 600;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(1, now + 0.15);
+      g.gain.setValueAtTime(1, now + p.dur - 0.3);
+      g.gain.linearRampToValueAtTime(0, now + p.dur);
+      osc.connect(lp); osc2.connect(lp); lp.connect(g); g.connect(out);
+      osc.start(now); osc2.start(now); osc.stop(now + p.dur); osc2.stop(now + p.dur);
+      break;
+    }
+    case "rocket": {
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuffer(p.dur);
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = "lowpass"; lp.frequency.value = 500;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.2, now);
+      g.gain.linearRampToValueAtTime(1, now + p.dur*0.5);
+      g.gain.linearRampToValueAtTime(0, now + p.dur);
+      src.connect(lp); lp.connect(g); g.connect(out);
+      // のぼっていく ぴゅーん
+      const osc = audioCtx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.exponentialRampToValueAtTime(1800, now + p.dur);
+      const og = audioCtx.createGain();
+      og.gain.setValueAtTime(0.0001, now);
+      og.gain.linearRampToValueAtTime(0.5, now + 0.2);
+      og.gain.linearRampToValueAtTime(0, now + p.dur);
+      osc.connect(og); og.connect(out);
+      src.start(now); osc.start(now);
+      src.stop(now + p.dur); osc.stop(now + p.dur);
+      break;
+    }
+  }
+}
+
+/* ============================== がめん せいぎょ ============================== */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  const el = document.getElementById(id);
+  if (el) el.classList.add("active");
+}
+
+function go(target){
+  switch(target){
+    case "home":   show("home"); greetHome(); break;
+    case "m1":     show("m1"); enterM1(); break;
+    case "m2":     show("m2"); enterM2(); break;
+    case "m3":     show("m3"); enterM3(); break;
+    case "garage": show("garage"); renderGarage(); break;
+    default:       show(target);
+  }
+}
+
+/* ----------- ヘルパ：ランダム ----------- */
+function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ----------- ガレージ 追加 ----------- */
+function addToGarage(id){
+  if (!State.garage.has(id)){
+    State.garage.add(id);
+    saveSet(STORE.garage, State.garage);
+  }
+}
+
+/* ============================== ホーム ============================== */
+function greetHome(){
+  const nm = State.name || "おともだち";
+  const lines = [
+    nm + "、なにして あそぶ？",
+    nm + "、こんにちは！ なにする？",
+    "ぶーぶーだよ。" + nm + "、あそぼう！"
+  ];
+  const msg = pickRandom(lines);
+  document.getElementById("homeSpeech").textContent = msg;
+  speak(msg);
+}
+
+/* ============================== ① これなあに ============================== */
+function enterM1(){
+  // ぜんかいと ちがう のりものを えらぶ
+  let v = pickRandom(VEHICLES);
+  if (State.m1 && VEHICLES.length > 1){
+    while (v.id === State.m1.id) v = pickRandom(VEHICLES);
+  }
+  State.m1 = v;
+  document.getElementById("m1Card").textContent = v.emoji;
+  document.getElementById("m1Name").textContent = " ";
+  addToGarage(v.id);
+  speak("これ なあに？");
+}
+function tapM1(){
+  const v = State.m1; if (!v) return;
+  document.getElementById("m1Name").textContent = v.name;
+  const card = document.getElementById("m1Card");
+  card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
+  speak(v.name + "。" + v.word);
+}
+
+/* ============================== ② 音・まね遊び ============================== */
+function enterM2(){
+  let v = pickRandom(VEHICLES);
+  if (State.m2 && VEHICLES.length > 1){
+    while (v.id === State.m2.id) v = pickRandom(VEHICLES);
+  }
+  State.m2 = v;
+  document.getElementById("m2Card").textContent = v.emoji;
+  document.getElementById("m2Onoma").textContent = " ";
+  addToGarage(v.id);
+  speak("どんな おとかな？ タッチしてね。");
+}
+function tapM2(){
+  const v = State.m2; if (!v) return;
+  document.getElementById("m2Onoma").textContent = v.onoma;
+  const card = document.getElementById("m2Card");
+  card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
+  playSound(v.sound);
+  // 効果音の あとに オノマトペを よみあげ
+  setTimeout(() => speak(v.onoma), 900);
+}
+
+/* ============================== ③ みじかいお話 ============================== */
+function enterM3(){
+  // まいかい えらぶ がめんに もどす
+  document.getElementById("m3Picker").classList.remove("hide");
+  document.getElementById("m3View").classList.add("hide");
+  document.getElementById("m3Back").onclick = () => go("home");
+  speak("どっちの おはなしに する？ みじかいの、ながいの？");
+}
+
+function fillName(text){
+  return text.split("{name}").join(State.name || "あなた");
+}
+
+function chooseStory(){
+  // みどく ゆうせんで じゅんかい。ぜんぶ よんだら リセット。
+  let pool = STORIES.filter(s => !State.read.has(s.id));
+  if (pool.length === 0){
+    State.read = new Set();
+    saveSet(STORE.read, State.read);
+    pool = STORIES.slice();
+  }
+  // ぜんかいと おなじ おはなしは さける
+  let s = pickRandom(pool);
+  if (State.story && pool.length > 1){
+    while (s.id === State.story.id) s = pickRandom(pool);
+  }
+  State.story = s;
+  State.read.add(s.id);
+  saveSet(STORE.read, State.read);
+  return s;
+}
+
+function renderStory(){
+  const s = State.story; if (!s) return;
+  const v = vById[s.v];
+  const sentences = (State.storyLen === "long" ? s.long : s.short).map(fillName);
+  document.getElementById("storyEmoji").textContent = v ? v.emoji : "📖";
+  document.getElementById("storyText").innerHTML =
+    sentences.map(t => "<div>" + escapeHtml(t) + "</div>").join("");
+  speakStory(sentences);
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+}
+
+/** おはなしを ぶんごとに よみあげ（あいだに すこし ま をおく）。 */
+function speakStory(sentences){
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  sentences.forEach((line, i) => {
+    const u = new SpeechSynthesisUtterance(line);
+    u.lang = "ja-JP"; u.rate = 0.82; u.pitch = 1.12; u.volume = 1.0;
+    if (State.jaVoice) u.voice = State.jaVoice;
+    if (i < sentences.length - 1) u.text = line + "、";
+    speechSynthesis.speak(u);
+  });
+}
+
+function startStory(len){
+  State.storyLen = len;
+  document.getElementById("m3Picker").classList.add("hide");
+  document.getElementById("m3View").classList.remove("hide");
+  // ほんぶん がめんの もどるは えらぶ がめんへ
+  document.getElementById("m3Back").onclick = () => enterM3();
+  chooseStory();
+  renderStory();
+}
+
+/* ============================== ガレージ ============================== */
+function renderGarage(){
+  const grid = document.getElementById("garageGrid");
+  grid.innerHTML = "";
+  VEHICLES.forEach(v => {
+    const got = State.garage.has(v.id);
+    const cell = document.createElement("div");
+    cell.className = "cell " + (got ? "unlocked" : "locked");
+    cell.innerHTML = '<div class="emoji">' + v.emoji + '</div>' +
+                     '<div class="nm">' + (got ? escapeHtml(v.name) : "？？？") + '</div>';
+    if (got){
+      cell.addEventListener("click", () => {
+        speak(v.name);
+        cell.style.transform = "scale(0.92)";
+        setTimeout(() => cell.style.transform = "", 120);
+      });
+    }
+    grid.appendChild(cell);
+  });
+  document.getElementById("garageProgress").textContent =
+    "あつめた のりもの " + State.garage.size + " / " + VEHICLES.length + " だい";
+}
+
+/* ============================== 保護者ゲート / せってい ============================== */
+let pressTimer = null;
+function startPress(){
+  clearTimeout(pressTimer);
+  pressTimer = setTimeout(openParent, 3000); // 3びょう ながおし
+}
+function cancelPress(){ clearTimeout(pressTimer); }
+
+function openParent(){
+  document.getElementById("nameInput2").value = State.name;
+  show("parent");
+}
+
+function saveName(value, isSetup){
+  const nm = (value || "").trim().slice(0, 10);
+  if (!nm) return false;
+  State.name = nm;
+  localStorage.setItem(STORE.name, nm);
+  return true;
+}
+
+/* ============================== アイコン その場生成（Canvas → PNG data URI） ============================== */
+function generateAppleIcon(){
+  try{
+    const size = 180;
+    const c = document.createElement("canvas");
+    c.width = size; c.height = size;
+    const ctx = c.getContext("2d");
+    // まるかど はいけい（こうじ きいろ）
+    const r = 40;
+    ctx.fillStyle = "#ffb300";
+    ctx.beginPath();
+    ctx.moveTo(r,0); ctx.arcTo(size,0,size,size,r); ctx.arcTo(size,size,0,size,r);
+    ctx.arcTo(0,size,0,0,r); ctx.arcTo(0,0,size,0,r); ctx.closePath(); ctx.fill();
+    // しょうぼうしゃ
+    ctx.font = "118px serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("🚒", size/2, size/2 + 8);
+    const url = c.toDataURL("image/png");
+    const link = document.getElementById("appleIcon");
+    if (link) link.setAttribute("href", url);
+  }catch(e){ /* しっぱいしても SVG フォールバックが のこる */ }
+}
+
+/* ============================== Service Worker 登録 ============================== */
+if ("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
+}
+
+/* ============================== イベント はいせん ============================== */
+function bind(){
+  // スタート（unlock）
+  document.getElementById("startBtn").addEventListener("click", () => {
+    unlockAudio();
+    generateAppleIcon();
+    if (State.name) go("home");
+    else { show("setup"); document.getElementById("nameInput").focus(); }
+  });
+
+  // せってい（さいしょ）
+  document.getElementById("setupSave").addEventListener("click", () => {
+    const v = document.getElementById("nameInput").value;
+    if (saveName(v, true)) go("home");
+    else { speak("おなまえを いれてね"); document.getElementById("nameInput").focus(); }
+  });
+
+  // ホームの モードボタン / もどるボタン（data-go）
+  document.querySelectorAll("[data-go]").forEach(btn => {
+    btn.addEventListener("click", () => go(btn.getAttribute("data-go")));
+  });
+
+  // ① これなあに
+  document.getElementById("m1Card").addEventListener("click", tapM1);
+  document.getElementById("m1Next").addEventListener("click", enterM1);
+
+  // ② 音・まね
+  document.getElementById("m2Card").addEventListener("click", tapM2);
+  document.getElementById("m2Next").addEventListener("click", enterM2);
+
+  // ③ おはなし
+  document.querySelectorAll(".pickbtn").forEach(b => {
+    b.addEventListener("click", () => startStory(b.getAttribute("data-len")));
+  });
+  document.getElementById("storyRepeat").addEventListener("click", () => {
+    const sentences = (State.storyLen === "long" ? State.story.long : State.story.short).map(fillName);
+    speakStory(sentences);
+  });
+  document.getElementById("storyNew").addEventListener("click", () => {
+    chooseStory(); renderStory();
+  });
+
+  // 保護者ゲート（3びょう ながおし）— ホームの はぐるま
+  const gear = document.getElementById("gearBtn");
+  gear.addEventListener("pointerdown", startPress);
+  gear.addEventListener("pointerup", cancelPress);
+  gear.addEventListener("pointerleave", cancelPress);
+  gear.addEventListener("pointercancel", cancelPress);
+
+  // せってい がめん
+  document.getElementById("parentSave").addEventListener("click", () => {
+    if (saveName(document.getElementById("nameInput2").value, false)){
+      speak("ほぞん したよ");
+    }
+  });
+  document.getElementById("voiceTest").addEventListener("click", () => {
+    speak("こんにちは。" + (State.name || "おともだち") + "。これは こえの てすとだよ。");
+  });
+  document.getElementById("parentClose").addEventListener("click", () => go("home"));
+
+  // ダブルタップ ズームの よくせい
+  document.addEventListener("dblclick", e => e.preventDefault(), { passive:false });
+}
+
+bind();
+</script>
+</body>
+</html>
