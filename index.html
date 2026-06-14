@@ -205,6 +205,7 @@
   .svgveh .hook{ transform-box:fill-box; transform-origin:top center; animation:swingv 2.2s ease-in-out infinite; }
   .svgveh .arm{ animation:digv 2.4s ease-in-out infinite; }
   .svgveh .wave{ animation:wavev 2.4s linear infinite; }
+  .svgveh .slowspin{ transform-box:fill-box; transform-origin:center; animation:spin 4s linear infinite; }
   @keyframes spin{ to{ transform:rotate(360deg); } }
   @keyframes bobv{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-4px); } }
   @keyframes flyv{ 0%,100%{ transform:translateY(0) rotate(-1.5deg); } 50%{ transform:translateY(-8px) rotate(1.5deg); } }
@@ -379,7 +380,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.1.3";
+const APP_VERSION = "v0.2.0";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -402,7 +403,43 @@ const VEHICLES = [
   { id:"heli",       name:"へりこぷたー",       emoji:"🚁", onoma:"ばたばた ばたばた！",  sound:"rotor",   word:"くるくる まわる へりこぷたー。そらを とぶよ。" },
   { id:"hikouki",    name:"ひこうき",           emoji:"✈️", onoma:"ごー ーっ！",          sound:"jet",     word:"おおきな ひこうき。くもの うえまで とんでいくよ。" },
   { id:"fune",       name:"ふね",               emoji:"⛴️", onoma:"ぼぼ ぼー！",          sound:"shiphorn",word:"おおきな ふね。うみの うえを ゆっくり すすむよ。" },
-  { id:"rocket",     name:"ろけっと",           emoji:"🚀", onoma:"ごー ぴゅーん！",      sound:"rocket",  word:"そらたかく とぶ ろけっと。おほしさままで いけるかな。" }
+  { id:"rocket",     name:"ろけっと",           emoji:"🚀", onoma:"ごー ぴゅーん！",      sound:"rocket",  word:"そらたかく とぶ ろけっと。おほしさままで いけるかな。" },
+  { id:"car", name:"じどうしゃ", emoji:"🚗", onoma:"ぶっ ぶー！", sound:"horn", word:"あかい じどうしゃ。どこへでも はしっていくよ。" },
+  { id:"moto", name:"オートバイ", emoji:"🏍️", onoma:"ぶろろろ！", sound:"bike", word:"はやい オートバイ。ぶろろろと はしるよ。" },
+  { id:"shirobai", name:"しろバイ", emoji:"🏍️", onoma:"ウー ウー！", sound:"siren", word:"しろい けいさつの バイク。みんなを まもるよ。" },
+  { id:"racecar", name:"レーシングカー", emoji:"🏎️", onoma:"びゅーん！", sound:"race", word:"とっても はやい レーシングカー。びゅーんと はしるよ。" },
+  { id:"ddbus", name:"にかいだてバス", emoji:"🚌", onoma:"ぶっ ぶー！", sound:"horn", word:"にかいだての おおきな ばす。うえからの けしき すてきだね。" },
+  { id:"safari", name:"サファリバス", emoji:"🚐", onoma:"がおー！", sound:"horn", word:"どうぶつもようの サファリバス。どうぶつを みにいこう。" },
+  { id:"bicycle", name:"じてんしゃ", emoji:"🚲", onoma:"りん りん！", sound:"bell", word:"ペダルを こいで すすむ じてんしゃ。りんりん！" },
+  { id:"tanklorry", name:"タンクローリー", emoji:"🚛", onoma:"ぶーん！", sound:"engine", word:"あぶらや みずを はこぶ タンクローリー。おおきな タンクだね。" },
+  { id:"delivery", name:"たくはいしゃ", emoji:"🚚", onoma:"ぴんぽーん！", sound:"horn", word:"おにもつを とどける たくはいしゃ。ありがとう！" },
+  { id:"mail", name:"ゆうびんしゃ", emoji:"🚚", onoma:"ことこと！", sound:"engine", word:"おてがみを はこぶ ゆうびんしゃ。あかくて かわいいね。" },
+  { id:"security", name:"けいびしゃ", emoji:"🚐", onoma:"ぱとぱと！", sound:"engine", word:"みんなを まもる けいびしゃ。あんしんだね。" },
+  { id:"carrier", name:"キャリアカー", emoji:"🚛", onoma:"ぶおーん！", sound:"engine", word:"くるまを のせて はこぶ キャリアカー。いっぱい のるね。" },
+  { id:"superambu", name:"スーパーアンビュランス", emoji:"🚑", onoma:"ぴーぽー ぴーぽー！", sound:"piipoo", word:"おおきな きゅうきゅうしゃ。たくさん たすけられるよ。" },
+  { id:"roller", name:"ロードローラー", emoji:"🚧", onoma:"ごろごろ！", sound:"motor", word:"じめんを ぺったんこ ロードローラー。ごろごろ ならすよ。" },
+  { id:"loader", name:"ホイールローダー", emoji:"🚜", onoma:"うぃーん！", sound:"engine", word:"つちを すくう ホイールローダー。おおきな バケットだね。" },
+  { id:"mixer", name:"ミキサーしゃ", emoji:"🚛", onoma:"ぐるぐる！", sound:"motor", word:"コンクリートを まぜる ミキサーしゃ。ぐるぐる まわるよ。" },
+  { id:"amphibus", name:"すいりくりょうようバス", emoji:"🚌", onoma:"ざぶーん！", sound:"engine", word:"りくも うみも すすむ すいりくバス。ざぶーん！" },
+  { id:"tractor", name:"トラクター", emoji:"🚜", onoma:"ごとごと！", sound:"engine", word:"はたけを たがやす トラクター。おおきな タイヤだね。" },
+  { id:"sweeper", name:"ろめんせいそうしゃ", emoji:"🚛", onoma:"しゃー！", sound:"motor", word:"みちを そうじする せいそうしゃ。ぴかぴかに するよ。" },
+  { id:"forklift", name:"フォークリフト", emoji:"🚜", onoma:"ぴっ ぴっ！", sound:"motor", word:"にもつを もちあげる フォークリフト。フォークで よいしょ。" },
+  { id:"bulldozer", name:"ブルドーザー", emoji:"🚜", onoma:"ががが！", sound:"engine", word:"つちを おしのける ブルドーザー。ちからもちだね。" },
+  { id:"offroaddump", name:"オフロードダンプ", emoji:"🚛", onoma:"ずしーん！", sound:"engine", word:"とっても おおきな ダンプ。やまみたいだね。" },
+  { id:"combine", name:"コンバイン", emoji:"🚜", onoma:"ざざー！", sound:"engine", word:"おこめを かりとる コンバイン。たくさん とれるね。" },
+  { id:"snowplow", name:"じょせつしゃ", emoji:"🚜", onoma:"ざーっ！", sound:"engine", word:"ゆきを かきわける じょせつしゃ。みちが あんしんだね。" },
+  { id:"hayabusa", name:"はやぶさ", emoji:"🚄", onoma:"びゅーん！", sound:"whoosh", word:"みどりの はやい しんかんせん はやぶさ。びゅーん！" },
+  { id:"komachi", name:"こまち", emoji:"🚄", onoma:"びゅーん！", sound:"whoosh", word:"あかい しんかんせん こまち。かっこいいね。" },
+  { id:"doctoryellow", name:"ドクターイエロー", emoji:"🚄", onoma:"びゅーん！", sound:"whoosh", word:"きいろい しんかんせん ドクターイエロー。みつけたら ラッキー！" },
+  { id:"subway", name:"ちかてつ", emoji:"🚇", onoma:"ごーっ！", sound:"train", word:"ちかを はしる ちかてつ。トンネルを すすむよ。" },
+  { id:"tram", name:"ろめんでんしゃ", emoji:"🚊", onoma:"ちんちん！", sound:"train", word:"みちを はしる ろめんでんしゃ。ちんちん でんしゃ！" },
+  { id:"ropeway", name:"ロープウェイ", emoji:"🚠", onoma:"すーっ！", sound:"motor", word:"そらを わたる ロープウェイ。やまの うえまで すいー。" },
+  { id:"balloon", name:"ねつききゅう", emoji:"🎈", onoma:"ごーっ！", sound:"whoosh", word:"そらに ふわふわ ねつききゅう。たかく あがるよ。" },
+  { id:"sailboat", name:"ヨット", emoji:"⛵", onoma:"すーっ！", sound:"whoosh", word:"かぜで すすむ ヨット。うみを すいすい。" },
+  { id:"waterbus", name:"すいじょうバス", emoji:"⛴️", onoma:"ぼぼー！", sound:"shiphorn", word:"うみを はしる すいじょうバス。みずの うえの ばすだね。" },
+  { id:"tanker", name:"タンカー", emoji:"🚢", onoma:"ぼおー！", sound:"shiphorn", word:"あぶらを はこぶ おおきな タンカー。うみを すすむよ。" },
+  { id:"cruise", name:"おおがたきゃくせん", emoji:"🚢", onoma:"ぼおー！", sound:"shiphorn", word:"おおきな きゃくせん。たくさんの ひとが のれるよ。" },
+  { id:"motorboat", name:"モーターボート", emoji:"🚤", onoma:"ぶるるん！", sound:"engine", word:"はやい モーターボート。なみを けって すすむよ。" }
 ];
 
 const vById = Object.fromEntries(VEHICLES.map(v => [v.id, v]));
@@ -427,7 +464,43 @@ const VEHICLE_ART = {
   heli:       { shape:"heli",      c:"#29a3ff" },
   hikouki:    { shape:"plane",     c:"#eef2f6" },
   fune:       { shape:"ship",      c:"#e5443b" },
-  rocket:     { shape:"rocket",    c:"#eef2f6" }
+  rocket:     { shape:"rocket",    c:"#eef2f6" },
+  car: { shape:"car", c:"#e5443b" },
+  moto: { shape:"moto", c:"#1f7ae0" },
+  shirobai: { shape:"shirobai", c:"#f4f6f8" },
+  racecar: { shape:"racecar", c:"#e5443b" },
+  ddbus: { shape:"ddbus", c:"#e5443b" },
+  safari: { shape:"safari", c:"#ffce00" },
+  bicycle: { shape:"bicycle", c:"#3fbf6f" },
+  tanklorry: { shape:"tanklorry", c:"#cfd8dc" },
+  delivery: { shape:"delivery", c:"#ff8f00" },
+  mail: { shape:"mail", c:"#e5443b" },
+  security: { shape:"security", c:"#37474f" },
+  carrier: { shape:"carrier", c:"#1f7ae0" },
+  superambu: { shape:"superambu", c:"#ffffff" },
+  roller: { shape:"roller", c:"#ffb300" },
+  loader: { shape:"loader", c:"#ffb300" },
+  mixer: { shape:"mixer", c:"#29a3ff" },
+  amphibus: { shape:"amphibus", c:"#3fbf6f" },
+  tractor: { shape:"tractor", c:"#1f7ae0" },
+  sweeper: { shape:"sweeper", c:"#3fbf6f" },
+  forklift: { shape:"forklift", c:"#ff8f00" },
+  bulldozer: { shape:"bulldozer", c:"#ffb300" },
+  offroaddump: { shape:"offroaddump", c:"#ffce00" },
+  combine: { shape:"combine", c:"#e5443b" },
+  snowplow: { shape:"snowplow", c:"#ff8f00" },
+  hayabusa: { shape:"hayabusa", c:"#1f7a3f" },
+  komachi: { shape:"komachi", c:"#e5326b" },
+  doctoryellow: { shape:"doctoryellow", c:"#ffce00" },
+  subway: { shape:"subway", c:"#ff8f00" },
+  tram: { shape:"tram", c:"#1f7ae0" },
+  ropeway: { shape:"ropeway", c:"#e5443b" },
+  balloon: { shape:"balloon", c:"#e5443b" },
+  sailboat: { shape:"sailboat", c:"#f4f6f8" },
+  waterbus: { shape:"waterbus", c:"#29a3ff" },
+  tanker: { shape:"tanker", c:"#37474f" },
+  cruise: { shape:"cruise", c:"#f4f7f9" },
+  motorboat: { shape:"motorboat", c:"#e5443b" }
 };
 
 const SHADOW = '<ellipse cx="120" cy="169" rx="86" ry="9" fill="rgba(0,0,0,0.10)"/>';
@@ -460,6 +533,15 @@ function driveWheel(cx, cy, r){
 }
 
 /** 形状タイプから のりものの SVG 中身を くみたてる。 */
+function shinkansenBody(bodyC, accentC){
+  return '<g class="veh">'
+    + '<path d="M30 78 L150 78 Q210 88 210 112 L210 130 Q210 138 200 138 L30 138 Q22 138 22 130 L22 86 Q22 78 30 78 Z" fill="'+bodyC+'"/>'
+    + '<path d="M150 78 Q210 88 210 112 L150 112 Z" fill="'+accentC+'"/>'
+    + '<rect x="22" y="112" width="188" height="12" fill="'+accentC+'"/>'
+    + win(40,90,26,18) + win(74,90,26,18) + win(108,90,26,18)
+    + '<rect x="34" y="137" width="164" height="10" rx="3" fill="#37474f"/>'
+    + '<rect x="22" y="151" width="188" height="6" rx="3" fill="#90a4ae"/></g>';
+}
 function vehicleBody(id){
   const art = VEHICLE_ART[id] || { shape:"truck", c:"#29a3ff" };
   const c = art.c;
@@ -601,6 +683,42 @@ function vehicleBody(id){
       + '<g class="flame"><path d="M102 112 Q120 152 138 112 Q120 130 102 112 Z" fill="#ffb300"/><path d="M110 112 Q120 140 130 112 Q120 126 110 112 Z" fill="#ff5b2e"/></g>'
       + '</g>'
       + '<circle class="beacon" cx="42" cy="40" r="3" fill="#ffd54f"/><circle class="beacon2" cx="198" cy="58" r="3" fill="#ffd54f"/>';
+    case "car": return '<g class="veh">' + '<rect x="34" y="104" width="172" height="36" rx="14" fill="'+c+'"/>' + '<path d="M64 104 Q92 74 150 74 L178 104 Z" fill="'+c+'"/>' + win(92,80,54,22) + wheel(74,150) + wheel(166,150) + '</g>';
+    case "moto": return '<g class="veh">' + wheel(64,150,24) + wheel(176,150,24) + '<path d="M64 150 L104 116 L150 116 L176 150 Z" fill="'+c+'"/>' + '<rect x="96" y="104" width="44" height="18" rx="9" fill="'+c+'"/>' + '<line x1="150" y1="118" x2="180" y2="92" stroke="#37474f" stroke-width="6"/>' + '<line x1="168" y1="92" x2="194" y2="92" stroke="#37474f" stroke-width="6" stroke-linecap="round"/>' + '</g>';
+    case "shirobai": return '<g class="veh">' + wheel(64,150,24) + wheel(176,150,24) + '<path d="M64 150 L104 116 L150 116 L176 150 Z" fill="'+c+'"/>' + '<rect x="96" y="104" width="44" height="18" rx="9" fill="'+c+'"/>' + '<line x1="150" y1="118" x2="180" y2="92" stroke="#37474f" stroke-width="6"/>' + '<line x1="168" y1="92" x2="194" y2="92" stroke="#37474f" stroke-width="6" stroke-linecap="round"/>' + '<path d="M150 116 Q168 104 168 90" fill="none" stroke="#bfe6ff" stroke-width="6"/>' + '<rect class="beacon" x="108" y="92" width="20" height="9" rx="2" fill="#ff5252"/>' + '</g>';
+    case "racecar": return '<g class="veh">' + '<rect x="40" y="112" width="160" height="22" rx="8" fill="'+c+'"/>' + '<path d="M150 112 Q170 96 198 96 L202 112 Z" fill="'+c+'"/>' + '<circle cx="172" cy="104" r="8" fill="#37474f"/>' + '<rect x="28" y="106" width="16" height="20" rx="3" fill="'+c+'"/>' + '<rect x="196" y="90" width="22" height="6" rx="2" fill="'+c+'"/>' + '<rect x="210" y="90" width="6" height="32" rx="2" fill="'+c+'"/>' + wheel(70,140,18) + wheel(176,140,18) + '</g>';
+    case "ddbus": return '<g class="veh">' + '<rect x="24" y="56" width="192" height="86" rx="14" fill="'+c+'"/>' + win(34,66,28,22) + win(70,66,28,22) + win(106,66,28,22) + win(142,66,28,22) + win(178,66,26,22) + win(34,98,28,22) + win(70,98,28,22) + win(106,98,28,22) + win(142,98,28,22) + win(178,98,26,22) + wheel(64,150) + wheel(176,150) + '</g>';
+    case "safari": return '<g class="veh">' + '<rect x="26" y="80" width="188" height="62" rx="14" fill="'+c+'"/>' + '<circle cx="60" cy="122" r="9" fill="#a06a2c"/>' + '<circle cx="96" cy="130" r="7" fill="#a06a2c"/>' + '<circle cx="140" cy="122" r="9" fill="#a06a2c"/>' + '<circle cx="180" cy="128" r="7" fill="#a06a2c"/>' + win(36,90,30,22) + win(74,90,30,22) + win(112,90,30,22) + win(150,90,30,22) + wheel(66,150) + wheel(176,150) + '</g>';
+    case "bicycle": return '<g class="veh">' + '<g class="wheel"><circle cx="62" cy="138" r="30" fill="#eef2f6" stroke="#37474f" stroke-width="5"/><line x1="62" y1="108" x2="62" y2="168" stroke="#90a4ae" stroke-width="2"/><line x1="32" y1="138" x2="92" y2="138" stroke="#90a4ae" stroke-width="2"/></g>' + '<g class="wheel"><circle cx="178" cy="138" r="30" fill="#eef2f6" stroke="#37474f" stroke-width="5"/><line x1="178" y1="108" x2="178" y2="168" stroke="#90a4ae" stroke-width="2"/><line x1="148" y1="138" x2="208" y2="138" stroke="#90a4ae" stroke-width="2"/></g>' + '<line x1="112" y1="138" x2="96" y2="90" stroke="'+c+'" stroke-width="5"/>' + '<line x1="112" y1="138" x2="62" y2="138" stroke="'+c+'" stroke-width="5"/>' + '<line x1="96" y1="90" x2="62" y2="138" stroke="'+c+'" stroke-width="5"/>' + '<line x1="112" y1="138" x2="150" y2="98" stroke="'+c+'" stroke-width="5"/>' + '<line x1="96" y1="90" x2="150" y2="98" stroke="'+c+'" stroke-width="5"/>' + '<line x1="150" y1="98" x2="178" y2="138" stroke="'+c+'" stroke-width="5"/>' + '<rect x="84" y="84" width="26" height="7" rx="3" fill="#37474f"/>' + '<line x1="150" y1="98" x2="150" y2="80" stroke="#37474f" stroke-width="5"/>' + '<line x1="140" y1="80" x2="168" y2="80" stroke="#37474f" stroke-width="5" stroke-linecap="round"/>' + '<circle cx="112" cy="138" r="6" fill="#37474f"/>' + '</g>';
+    case "tanklorry": return '<g class="veh">' + '<rect x="150" y="92" width="56" height="50" rx="9" fill="#37474f"/>' + win(158,100,38,22) + '<rect x="24" y="96" width="124" height="42" rx="21" fill="'+c+'"/>' + '<line x1="60" y1="96" x2="60" y2="138" stroke="#90a4ae" stroke-width="2"/>' + '<line x1="100" y1="96" x2="100" y2="138" stroke="#90a4ae" stroke-width="2"/>' + '<rect x="20" y="134" width="190" height="8" rx="3" fill="#37474f"/>' + wheel(56,150) + wheel(150,150) + wheel(184,150,15) + '</g>';
+    case "delivery": return '<g class="veh">' + '<rect x="30" y="86" width="118" height="56" rx="8" fill="'+c+'"/>' + '<rect x="144" y="98" width="58" height="44" rx="9" fill="'+c+'"/>' + win(152,106,40,22) + '<rect x="66" y="100" width="44" height="32" rx="3" fill="#ffffff" opacity="0.85"/>' + '<line x1="88" y1="100" x2="88" y2="132" stroke="'+c+'" stroke-width="3"/>' + '<line x1="66" y1="116" x2="110" y2="116" stroke="'+c+'" stroke-width="3"/>' + wheel(64,150) + wheel(176,150) + '</g>';
+    case "mail": return '<g class="veh">' + '<rect x="30" y="86" width="118" height="56" rx="8" fill="'+c+'"/>' + '<rect x="144" y="98" width="58" height="44" rx="9" fill="'+c+'"/>' + win(152,106,40,22) + '<rect x="72" y="102" width="34" height="28" rx="3" fill="#ffffff"/>' + '<text x="89" y="123" font-size="20" text-anchor="middle" fill="'+c+'" font-weight="bold">〒</text>' + wheel(64,150) + wheel(176,150) + '</g>';
+    case "security": return '<g class="veh">' + '<rect x="30" y="84" width="176" height="58" rx="10" fill="'+c+'"/>' + win(150,94,48,24) + '<rect x="42" y="102" width="92" height="28" rx="4" fill="#ffce00"/>' + '<rect class="beacon" x="98" y="74" width="20" height="10" rx="2" fill="#ffd54f"/>' + wheel(70,150) + wheel(176,150) + '</g>';
+    case "carrier": return '<g class="veh">' + '<rect x="150" y="96" width="54" height="46" rx="9" fill="'+c+'"/>' + win(158,104,38,22) + '<rect x="16" y="132" width="190" height="8" fill="#37474f"/>' + '<rect x="16" y="106" width="128" height="5" fill="#90a4ae"/>' + '<line x1="16" y1="111" x2="16" y2="132" stroke="#90a4ae" stroke-width="4"/>' + '<line x1="144" y1="106" x2="144" y2="132" stroke="#90a4ae" stroke-width="4"/>' + '<rect x="26" y="114" width="42" height="16" rx="6" fill="#29a3ff"/>' + '<rect x="78" y="114" width="42" height="16" rx="6" fill="#e5443b"/>' + '<rect x="34" y="88" width="42" height="16" rx="6" fill="#3fbf6f"/>' + '<rect x="88" y="88" width="42" height="16" rx="6" fill="#ffce00"/>' + wheel(56,150) + wheel(150,150) + wheel(184,150,15) + '</g>';
+    case "superambu": return '<g class="veh">' + '<rect x="22" y="74" width="196" height="68" rx="12" fill="'+c+'" stroke="#e2e6ea" stroke-width="2"/>' + win(150,84,52,26) + '<rect x="22" y="118" width="196" height="10" fill="#ff5252"/>' + '<rect x="60" y="86" width="12" height="34" fill="#ff5252"/>' + '<rect x="48" y="98" width="36" height="12" fill="#ff5252"/>' + '<rect class="beacon" x="100" y="64" width="20" height="10" rx="2" fill="#ff5252"/>' + wheel(64,150) + wheel(176,150) + '</g>';
+    case "roller": return '<g class="veh">' + '<rect x="72" y="86" width="74" height="44" rx="8" fill="'+c+'"/>' + win(80,94,32,22) + '<g class="wheel"><circle cx="56" cy="134" r="32" fill="#607d8b"/><circle cx="56" cy="134" r="32" fill="none" stroke="#455a64" stroke-width="4"/><line x1="56" y1="102" x2="56" y2="166" stroke="#455a64" stroke-width="3"/><line x1="24" y1="134" x2="88" y2="134" stroke="#455a64" stroke-width="3"/></g>' + wheel(150,148,20) + '</g>';
+    case "loader": return '<g class="veh">' + '<rect x="84" y="92" width="84" height="40" rx="8" fill="'+c+'"/>' + win(120,100,34,22) + '<path d="M48 130 L84 124 L84 110 L48 116 Z" fill="#c98a00"/>' + '<path d="M22 142 L48 142 L48 116 L22 124 Z" fill="#ffce00" stroke="#a06a00" stroke-width="2"/>' + wheel(98,150,22) + wheel(160,150,22) + '</g>';
+    case "mixer": return '<g class="veh">' + '<rect x="150" y="92" width="56" height="50" rx="9" fill="'+c+'"/>' + win(158,100,38,22) + '<rect x="18" y="134" width="190" height="8" fill="#37474f"/>' + '<g class="slowspin"><ellipse cx="90" cy="100" rx="60" ry="34" fill="#cfd8dc"/><path d="M52 78 L120 118" stroke="#90a4ae" stroke-width="8"/><path d="M64 72 L132 112" stroke="#b0bec5" stroke-width="8"/></g>' + wheel(56,150) + wheel(150,150) + wheel(184,150,15) + '</g>';
+    case "amphibus": return '<g class="veh">' + '<path d="M20 118 L220 118 L200 150 L40 150 Z" fill="#37474f"/>' + '<rect x="34" y="74" width="172" height="48" rx="12" fill="'+c+'"/>' + win(44,84,28,22) + win(80,84,28,22) + win(116,84,28,22) + win(152,84,28,22) + '</g>' + '<g class="wave"><path d="M-20 152 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
+    case "tractor": return '<g class="veh">' + '<rect x="68" y="92" width="78" height="34" rx="6" fill="'+c+'"/>' + '<rect x="118" y="72" width="38" height="42" rx="6" fill="'+c+'"/>' + win(125,80,24,22) + '<rect x="76" y="72" width="8" height="24" fill="#37474f"/>' + wheel(92,150,16) + '<g class="wheel"><circle cx="166" cy="136" r="34" fill="#263238"/><circle cx="166" cy="136" r="16" fill="#ffce00"/><line x1="166" y1="102" x2="166" y2="170" stroke="#455a64" stroke-width="3"/><line x1="132" y1="136" x2="200" y2="136" stroke="#455a64" stroke-width="3"/></g>' + '</g>';
+    case "sweeper": return '<g class="veh">' + '<rect x="36" y="86" width="168" height="50" rx="10" fill="'+c+'"/>' + win(150,94,48,24) + '<rect x="46" y="104" width="80" height="26" rx="4" fill="#ffffff" opacity="0.4"/>' + wheel(72,150) + wheel(176,150) + '<g class="wheel"><circle cx="40" cy="150" r="15" fill="#ffce00"/><line x1="40" y1="135" x2="40" y2="165" stroke="#c8a000" stroke-width="3"/><line x1="25" y1="150" x2="55" y2="150" stroke="#c8a000" stroke-width="3"/></g>' + '</g>';
+    case "forklift": return '<g class="veh">' + '<rect x="58" y="100" width="80" height="38" rx="6" fill="'+c+'"/>' + '<rect x="76" y="62" width="6" height="42" fill="#37474f"/>' + '<rect x="118" y="62" width="6" height="42" fill="#37474f"/>' + '<rect x="76" y="62" width="48" height="6" fill="#37474f"/>' + win(90,104,28,20) + '<rect x="150" y="58" width="8" height="80" fill="#90a4ae"/>' + '<rect x="150" y="124" width="38" height="8" fill="#90a4ae"/>' + '<rect x="156" y="92" width="34" height="30" rx="2" fill="#c8923a"/>' + wheel(78,150,16) + wheel(130,150,16) + '</g>';
+    case "bulldozer": return '<g class="veh">' + '<rect x="44" y="124" width="140" height="22" rx="11" fill="#37474f"/>' + '<circle cx="58" cy="135" r="8" fill="#90a4ae"/>' + '<circle cx="170" cy="135" r="8" fill="#90a4ae"/>' + '<circle cx="114" cy="135" r="6" fill="#90a4ae"/>' + '<rect x="80" y="92" width="80" height="38" rx="6" fill="'+c+'"/>' + win(88,100,30,22) + '<rect x="28" y="104" width="14" height="42" rx="3" fill="#c98a00"/>' + '<path d="M16 100 L40 100 L40 146 L16 146 Z" fill="#ffce00" stroke="#a06a00" stroke-width="2"/>' + '</g>';
+    case "offroaddump": return '<g class="veh">' + '<path d="M28 120 L40 80 L150 80 L150 120 Z" fill="'+c+'"/>' + '<circle cx="60" cy="78" r="8" fill="#8d6e63"/>' + '<circle cx="86" cy="73" r="9" fill="#a1887f"/>' + '<circle cx="112" cy="78" r="8" fill="#8d6e63"/>' + '<rect x="150" y="84" width="56" height="46" rx="6" fill="'+c+'"/>' + win(158,92,40,22) + '<rect x="16" y="124" width="194" height="14" rx="4" fill="#37474f"/>' + wheel(64,150,28) + wheel(176,150,28) + '</g>';
+    case "combine": return '<g class="veh">' + '<rect x="80" y="86" width="82" height="44" rx="6" fill="'+c+'"/>' + '<rect x="120" y="68" width="36" height="36" rx="5" fill="'+c+'"/>' + win(127,76,22,20) + '<rect x="28" y="108" width="56" height="26" rx="3" fill="#ffce00"/>' + '<g class="wheel"><circle cx="44" cy="120" r="13" fill="#ffffff" stroke="#c8a000" stroke-width="3"/><line x1="44" y1="107" x2="44" y2="133" stroke="#c8a000" stroke-width="2"/><line x1="31" y1="120" x2="57" y2="120" stroke="#c8a000" stroke-width="2"/></g>' + wheel(98,150,22) + wheel(166,150,14) + '</g>';
+    case "snowplow": return '<g class="veh">' + '<rect x="60" y="90" width="100" height="46" rx="8" fill="'+c+'"/>' + win(68,98,34,22) + '<rect x="150" y="100" width="50" height="36" rx="8" fill="'+c+'"/>' + '<path d="M18 138 L46 138 L40 100 L22 104 Z" fill="#e5443b"/>' + '<rect class="beacon" x="100" y="78" width="16" height="9" rx="2" fill="#ffce00"/>' + wheel(80,150) + wheel(176,150) + '</g>';
+    case "hayabusa": return shinkansenBody("#eef6f0", c);
+    case "komachi": return shinkansenBody("#fceef2", c);
+    case "doctoryellow": return shinkansenBody(c, "#1f3f8f");
+    case "subway": return '<g class="veh">' + '<rect x="44" y="64" width="160" height="80" rx="16" fill="'+c+'"/>' + win(56,82,30,30) + win(98,82,30,30) + win(140,82,30,30) + '<rect x="44" y="120" width="160" height="9" fill="#ffffff" opacity="0.5"/>' + '<rect x="48" y="139" width="152" height="9" rx="3" fill="#37474f"/>' + '</g>' + '<path d="M4 150 L4 86 Q4 58 32 56 L32 150 Z" fill="#5d4b39"/>' + '<path d="M4 86 Q4 58 32 56" fill="none" stroke="#463829" stroke-width="5"/>';
+    case "tram": return '<line x1="20" y1="42" x2="220" y2="42" stroke="#b0bec5" stroke-width="2"/>' + '<g class="veh">' + '<rect x="112" y="46" width="6" height="24" fill="#37474f"/>' + '<line x1="115" y1="48" x2="150" y2="44" stroke="#37474f" stroke-width="3"/>' + '<rect x="44" y="70" width="152" height="72" rx="14" fill="'+c+'"/>' + win(54,84,34,30) + win(98,84,34,30) + win(142,84,34,30) + '<rect x="44" y="120" width="152" height="9" fill="#ffffff" opacity="0.5"/>' + '<rect x="48" y="139" width="144" height="9" rx="3" fill="#37474f"/>' + '<rect x="28" y="151" width="184" height="5" rx="2" fill="#9aa7b0"/>' + '</g>';
+    case "ropeway": return '<line x1="0" y1="38" x2="240" y2="56" stroke="#90a4ae" stroke-width="3"/>' + '<g class="fly">' + '<rect x="96" y="46" width="48" height="14" rx="4" fill="#607d8b"/>' + '<line x1="120" y1="58" x2="120" y2="78" stroke="#607d8b" stroke-width="4"/>' + '<rect x="76" y="78" width="88" height="62" rx="12" fill="'+c+'"/>' + win(86,90,30,32) + win(124,90,30,32) + '</g>';
+    case "balloon": return '<g class="fly">' + '<path d="M120 26 C68 26 58 82 92 122 L148 122 C182 82 172 26 120 26 Z" fill="'+c+'"/>' + '<path d="M120 26 C104 26 100 82 108 122 L132 122 C140 82 136 26 120 26 Z" fill="#ffd54f" opacity="0.65"/>' + '<rect x="102" y="120" width="36" height="6" fill="#a06a2c"/>' + '<line x1="102" y1="124" x2="108" y2="150" stroke="#7a5a2c" stroke-width="2"/>' + '<line x1="138" y1="124" x2="132" y2="150" stroke="#7a5a2c" stroke-width="2"/>' + '<rect x="104" y="148" width="32" height="22" rx="4" fill="#8d5a2b"/>' + '</g>';
+    case "sailboat": return '<g class="veh">' + '<line x1="120" y1="40" x2="120" y2="120" stroke="#8d6e63" stroke-width="4"/>' + '<path d="M124 46 L124 114 L178 114 Z" fill="'+c+'" stroke="#cdd6de" stroke-width="2"/>' + '<path d="M116 58 L116 114 L78 114 Z" fill="#e5443b"/>' + '<path d="M62 120 L196 120 L176 146 L84 146 Z" fill="#37474f"/>' + '</g>' + '<g class="wave"><path d="M-20 150 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
+    case "waterbus": return '<g class="veh">' + '<path d="M20 112 L210 112 L188 146 L48 146 Z" fill="'+c+'"/>' + '<rect x="40" y="80" width="150" height="36" rx="8" fill="#eef4f8"/>' + win(50,88,26,20) + win(84,88,26,20) + win(118,88,26,20) + win(152,88,26,20) + '<rect x="150" y="60" width="8" height="22" fill="#37474f"/>' + '</g>' + '<g class="wave"><path d="M-20 150 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
+    case "tanker": return '<g class="veh">' + '<path d="M16 108 L214 108 L196 144 L40 144 Z" fill="'+c+'"/>' + '<rect x="16" y="100" width="198" height="9" fill="#e5443b"/>' + '<rect x="150" y="70" width="50" height="34" rx="4" fill="#eceff1"/>' + win(158,78,12,12) + win(178,78,12,12) + '<rect x="40" y="86" width="92" height="16" rx="3" fill="#90a4ae"/>' + '<circle cx="60" cy="94" r="5" fill="#607d8b"/>' + '<circle cx="90" cy="94" r="5" fill="#607d8b"/>' + '<circle cx="120" cy="94" r="5" fill="#607d8b"/>' + '</g>' + '<g class="wave"><path d="M-20 150 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
+    case "cruise": return '<g class="veh">' + '<path d="M16 116 L214 116 L196 148 L42 148 Z" fill="'+c+'"/>' + '<rect x="16" y="108" width="198" height="9" fill="#1f7ae0"/>' + '<rect x="40" y="80" width="150" height="30" rx="4" fill="#f4f7f9"/>' + '<rect x="56" y="58" width="120" height="22" rx="4" fill="#f4f7f9"/>' + win(50,88,16,14) + win(74,88,16,14) + win(98,88,16,14) + win(122,88,16,14) + win(146,88,16,14) + '<rect x="118" y="42" width="16" height="20" rx="3" fill="#1f3f8f"/>' + '<rect x="148" y="42" width="16" height="20" rx="3" fill="#1f3f8f"/>' + '</g>' + '<g class="wave"><path d="M-20 152 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
+    case "motorboat": return '<g class="veh">' + '<path d="M30 110 L182 104 Q212 104 216 116 L196 134 L48 138 Z" fill="'+c+'"/>' + '<path d="M74 104 L120 86 L150 86 L150 104 Z" fill="#bfe6ff"/>' + '<rect x="60" y="106" width="92" height="7" fill="#ffffff" opacity="0.5"/>' + '</g>' + '<g class="wave"><path d="M-20 150 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
     default: return '<g class="veh"><rect x="40" y="96" width="150" height="46" rx="10" fill="'+c+'"/>' + wheel(72,150) + wheel(160,150) + '</g>';
   }
 }
@@ -1132,6 +1250,94 @@ const STORIES = [
       "おおきな おみせの まえで とまったよ。",
       "「ありがとう」と {name}は ぺこり おじぎ。",
       "「なにを かおうかな」と わくわく したよ。"
+    ] },
+
+  { id:33, v:"mixer", short:[
+      "こうじげんばで {name}は ミキサーしゃと あそぶよ。",
+      "ぐるぐる、コンクリートを まぜているね。",
+      "「すごいね」と {name}が みあげたよ。"
+    ], long:[
+      "きょうは こうじげんばの けんがく。",
+      "{name}は あおい ミキサーしゃに であったよ。",
+      "うしろの おおきな タンクが ぐるぐる まわるね。",
+      "「なにを まぜているの?」と {name}が きいた。",
+      "「コンクリートだよ」と ミキサーしゃ。",
+      "じょうぶな たてものに なるんだって。",
+      "「がんばってね」と {name}は てを ふったよ。"
+    ] },
+
+  { id:34, v:"bulldozer", short:[
+      "すなばで {name}は ブルドーザーと あそぶよ。",
+      "がががー、つちを おしのけるよ。",
+      "たいらな みちが できたね。",
+      "「ちからもち だね」と わらったよ。"
+    ], long:[
+      "{name}は すなばで ブルドーザーに であったよ。",
+      "「でこぼこを たいらに するよ」と ブルドーザー。",
+      "がががー、おおきな はねで つちを おすよ。",
+      "{name}も よいしょと おうえん。",
+      "でこぼこが どんどん たいらに なっていく。",
+      "つるつるの みちが できあがったね。",
+      "「すごい ちからもち！」と {name}は はくしゅ。"
+    ] },
+
+  { id:35, v:"balloon", short:[
+      "{name}は ねつききゅうに のったよ。",
+      "ごーっ、ふわふわ そらへ あがるよ。",
+      "したの まちが ちいさく みえるね。",
+      "「きもちいいね」と {name}が わらったよ。"
+    ], long:[
+      "あさ、おおきな ねつききゅうが まっていた。",
+      "{name}は バスケットに のりこんだよ。",
+      "ごーっ、ひが もえて あたたかいね。",
+      "ふわふわ、ねつききゅうが そらへ あがるよ。",
+      "したを みると おうちが ちいさい。",
+      "とりさんが となりを とんでいくね。",
+      "「そらの おさんぽ たのしいね」と {name}。"
+    ] },
+
+  { id:36, v:"sailboat", short:[
+      "{name}は ヨットに のって うみへ。",
+      "かぜが ふいて すいすい すすむよ。",
+      "「きもちいい かぜ だね」と わらったよ。"
+    ], long:[
+      "はれた ひ、{name}は ヨットに のったよ。",
+      "おおきな しろい ほが かぜを うけるね。",
+      "すいすい、なみの うえを すすむよ。",
+      "とおくに かもめが とんでいる。",
+      "「もっと いこう!」と {name}が ゆびさす。",
+      "かぜに のって ヨットは ぐんぐん すすむ。",
+      "「うみは ひろいね」と {name}は にっこり。"
+    ] },
+
+  { id:37, v:"subway", short:[
+      "{name}は ちかてつに のったよ。",
+      "ごーっ、くらい トンネルを すすむよ。",
+      "ぱっと あかるい えきに ついたね。",
+      "「ちかてつ はやいね」と わらったよ。"
+    ], long:[
+      "きょうは ちかてつで おでかけ。",
+      "{name}は かいだんを おりて ホームへ。",
+      "ごーっ、ちかてつが やってきたよ。",
+      "のりこむと トンネルを すすんでいく。",
+      "まどの そとは くらいけど どきどき。",
+      "ぱっと あかるい えきに とうちゃく。",
+      "「ちかを はしるなんて すごいね」と {name}。"
+    ] },
+
+  { id:38, v:"hayabusa", short:[
+      "{name}は みどりの はやぶさに のったよ。",
+      "びゅーん、とっても はやいね。",
+      "けしきが しゅーっと ながれるよ。",
+      "「はやぶさ かっこいい！」と わらったよ。"
+    ], long:[
+      "きょうは はやぶさで とおくへ いくよ。",
+      "{name}は みどりの しんかんせんに のりこんだ。",
+      "びゅーん、しゅっぱつ しんこう！",
+      "まどの けしきが しゅーっと ながれていく。",
+      "とても はやくて びっくりだね。",
+      "おべんとうを たべながら たびを たのしむ。",
+      "「はやぶさ だいすき」と {name}は にっこり。"
     ] }
 ];
 
@@ -1155,7 +1361,10 @@ const SOUND_PARAMS = {
   rotor:    { kind:"rotor",  rate:14, dur:1.5, gain:0.18 },
   jet:      { kind:"jet",    dur:1.6, gain:0.16 },
   shiphorn: { kind:"shiphorn", f:150, dur:1.4, gain:0.20 },
-  rocket:   { kind:"rocket", dur:1.8, gain:0.18 }
+  rocket:   { kind:"rocket", dur:1.8, gain:0.18 },
+  bike:     { kind:"bike", base:130, dur:1.3, gain:0.16 },
+  race:     { kind:"race", base:240, dur:1.2, gain:0.14 },
+  bell:     { kind:"bell", f:1660, dings:3, gain:0.18 }
 };
 
 /* ============================== じょうたい ============================== */
@@ -1335,6 +1544,48 @@ function playSound(soundType){
         bg.gain.exponentialRampToValueAtTime(0.0001, bt + 0.18);
         bo.connect(bg); bo2.connect(bg); bg.connect(out);
         bo.start(bt); bo2.start(bt); bo.stop(bt + 0.2); bo2.stop(bt + 0.2);
+      }
+      break;
+    }
+    case "bike": {
+      const osc = audioCtx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(p.base, now);
+      osc.frequency.linearRampToValueAtTime(p.base*2.2, now + p.dur*0.5);
+      osc.frequency.linearRampToValueAtTime(p.base*1.6, now + p.dur);
+      const lfo = audioCtx.createOscillator(); lfo.frequency.value = 30;
+      const lg = audioCtx.createGain(); lg.gain.value = 20;
+      lfo.connect(lg); lg.connect(osc.frequency);
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.06);
+      g.gain.setValueAtTime(1, now + p.dur - 0.2); g.gain.linearRampToValueAtTime(0, now + p.dur);
+      osc.connect(g); g.connect(out);
+      osc.start(now); lfo.start(now); osc.stop(now + p.dur); lfo.stop(now + p.dur);
+      break;
+    }
+    case "race": {
+      const osc = audioCtx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(p.base, now);
+      osc.frequency.exponentialRampToValueAtTime(p.base*4, now + p.dur*0.7);
+      osc.frequency.exponentialRampToValueAtTime(p.base*1.5, now + p.dur);
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.05);
+      g.gain.linearRampToValueAtTime(0, now + p.dur);
+      osc.connect(g); g.connect(out);
+      osc.start(now); osc.stop(now + p.dur);
+      break;
+    }
+    case "bell": {
+      for (let i=0;i<p.dings;i++){
+        const t = now + i*0.3;
+        const o = audioCtx.createOscillator(); o.type = "square"; o.frequency.value = p.f;
+        const o2 = audioCtx.createOscillator(); o2.type = "square"; o2.frequency.value = p.f*1.5;
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5, t + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+        o.connect(g); o2.connect(g); g.connect(out);
+        o.start(t); o2.start(t); o.stop(t + 0.28); o2.stop(t + 0.28);
       }
       break;
     }
