@@ -379,15 +379,15 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.1.1";
+const APP_VERSION = "v0.1.2";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
 /** はたらくのりもの（なまえ・絵文字・オノマトペ・効果音タイプ・やさしい一言） */
 const VEHICLES = [
-  { id:"shoubou",    name:"しょうぼうしゃ",     emoji:"🚒", onoma:"うー うー！",        sound:"siren",   word:"あかくて かっこいい しょうぼうしゃ。みずを かけて おてつだい するよ。" },
-  { id:"patokaa",    name:"ぱとかー",           emoji:"🚓", onoma:"ぴーぽー ぴーぽー！",  sound:"siren",   word:"しろと くろの ぱとかー。まちを ぐるぐる みまわるよ。" },
-  { id:"kyuukyuu",   name:"きゅうきゅうしゃ",   emoji:"🚑", onoma:"ぴーぽー ぴーぽー！",  sound:"siren",   word:"しろい きゅうきゅうしゃ。みんなを やさしく はこぶよ。" },
+  { id:"shoubou",    name:"しょうぼうしゃ",     emoji:"🚒", onoma:"ウー ウー カンカン！",        sound:"firebell",   word:"あかくて かっこいい しょうぼうしゃ。みずを かけて おてつだい するよ。" },
+  { id:"patokaa",    name:"ぱとかー",           emoji:"🚓", onoma:"ウー ウー！",  sound:"siren",   word:"しろと くろの ぱとかー。まちを ぐるぐる みまわるよ。" },
+  { id:"kyuukyuu",   name:"きゅうきゅうしゃ",   emoji:"🚑", onoma:"ぴーぽー ぴーぽー！",  sound:"piipoo",   word:"しろい きゅうきゅうしゃ。みんなを やさしく はこぶよ。" },
   { id:"dump",       name:"だんぷかー",         emoji:"🚛", onoma:"ぶろろろ ろー！",      sound:"engine",  word:"おおきな だんぷかー。すなを いっぱい のせて はこぶよ。" },
   { id:"gomi",       name:"ごみしゅうしゅうしゃ", emoji:"🚚", onoma:"うぃーん がしゃ！",   sound:"engine",  word:"ごみを あつめて まちを ぴかぴかに するよ。ありがとう！" },
   { id:"crane",      name:"くれーんしゃ",       emoji:"🏗️", onoma:"ぐいーん ぐいーん！",  sound:"motor",   word:"たかーい くれーんしゃ。おもいものを そらへ もちあげるよ。" },
@@ -689,13 +689,13 @@ const STORIES = [
 
   { id:6, v:"patokaa", short:[
       "{name}は おまわりさんと ぱとかーに のったよ。",
-      "ぴーぽー、まちを ぐるりと みまわるよ。",
+      "うー うー、まちを ぐるりと みまわるよ。",
       "みんな げんきかな、と のぞいていく。",
       "「きょうも へいわだね」と わらったよ。"
     ], long:[
       "きょうは ぱとかーで まちを みまわる ひ。",
       "{name}は おまわりさんの となりに のったよ。",
-      "ぴーぽー ぴーぽー、らんぷが くるくる。",
+      "うー うー、らんぷが くるくる。",
       "こうえんでは こどもたちが あそんでいる。",
       "おみせの まえでは ねこが ひなたぼっこ。",
       "「みんな げんきだね」と {name}が いったよ。",
@@ -994,14 +994,14 @@ const STORIES = [
   { id:25, v:"patokaa", short:[
       "まいごの わんちゃんを みつけたよ。",
       "{name}と ぱとかーで おうちまで おくるよ。",
-      "ぴーぽー、ゆっくり はしっていく。",
+      "うー うー、ゆっくり はしっていく。",
       "わんちゃんが おうちに かえれて よかったね。"
     ], long:[
       "こうえんで まいごの わんちゃんが ないていた。",
       "「おうちは どこかな?」と {name}が きいたよ。",
       "ぱとかーが やさしく やってきてくれた。",
       "わんちゃんを そっと のせて、しゅっぱつ。",
-      "ぴーぽー、まちを ゆっくり はしっていく。",
+      "うー うー、まちを ゆっくり はしっていく。",
       "「ここが おうちだ!」と {name}が ゆびさす。",
       "かいぬしさんが「ありがとう」と おおよろこび。",
       "わんちゃんも しっぽを ふって うれしそう。"
@@ -1128,6 +1128,8 @@ const STORIES = [
  */
 const SOUND_PARAMS = {
   siren:    { kind:"siren",  f1:740, f2:480, segs:4, segDur:0.34, type:"sawtooth", gain:0.16 },
+  piipoo:   { kind:"piipoo", fHi:980, fLo:760, segs:4, segDur:0.45, type:"triangle", gain:0.16 },
+  firebell: { kind:"firebell", f1:720, f2:500, segs:3, segDur:0.34, type:"sawtooth", bellHz:1180, bells:4, gain:0.16 },
   engine:   { kind:"engine", base:70, dur:1.4, gain:0.20 },
   motor:    { kind:"motor",  base:180, dur:1.2, gain:0.14 },
   dig:      { kind:"dig",    bursts:5, dur:1.2, gain:0.22 },
@@ -1272,6 +1274,53 @@ function playSound(soundType){
         t += p.segDur;
       }
       osc.start(now); osc.stop(t + 0.02);
+      break;
+    }
+    case "piipoo": {
+      const osc = audioCtx.createOscillator();
+      osc.type = p.type;
+      const g = audioCtx.createGain();
+      let t = now;
+      for (let i=0;i<p.segs;i++){
+        osc.frequency.setValueAtTime(i % 2 === 0 ? p.fHi : p.fLo, t);
+        t += p.segDur;
+      }
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(1, now + 0.03);
+      g.gain.setValueAtTime(1, t - 0.05);
+      g.gain.linearRampToValueAtTime(0.0001, t);
+      osc.connect(g); g.connect(out);
+      osc.start(now); osc.stop(t + 0.02);
+      break;
+    }
+    case "firebell": {
+      const osc = audioCtx.createOscillator();
+      osc.type = p.type;
+      const g = audioCtx.createGain(); g.gain.value = 1;
+      osc.connect(g); g.connect(out);
+      let t = now;
+      for (let i=0;i<p.segs;i++){
+        osc.frequency.setValueAtTime(p.f1, t);
+        osc.frequency.linearRampToValueAtTime(p.f2, t + p.segDur*0.5);
+        osc.frequency.linearRampToValueAtTime(p.f1, t + p.segDur);
+        t += p.segDur;
+      }
+      osc.start(now); osc.stop(t + 0.02);
+      const total = t - now;
+      const step = total / p.bells;
+      for (let i=0;i<p.bells;i++){
+        const bt = now + i*step;
+        const bo = audioCtx.createOscillator();
+        bo.type = "square"; bo.frequency.value = p.bellHz;
+        const bo2 = audioCtx.createOscillator();
+        bo2.type = "square"; bo2.frequency.value = p.bellHz*1.5;
+        const bg = audioCtx.createGain();
+        bg.gain.setValueAtTime(0.0001, bt);
+        bg.gain.linearRampToValueAtTime(0.5, bt + 0.005);
+        bg.gain.exponentialRampToValueAtTime(0.0001, bt + 0.18);
+        bo.connect(bg); bo2.connect(bg); bg.connect(out);
+        bo.start(bt); bo2.start(bt); bo.stop(bt + 0.2); bo2.stop(bt + 0.2);
+      }
       break;
     }
     case "engine": {
