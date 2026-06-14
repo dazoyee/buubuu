@@ -379,7 +379,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.1.2";
+const APP_VERSION = "v0.1.3";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -444,6 +444,20 @@ function wheel(cx, cy, r){
 function win(x, y, w, h){
   return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="#bfe6ff"/>';
 }
+/** 蒸気機関車の動輪（赤・スポーク）。タイヤではなく列車の車輪と分かる見た目。 */
+function driveWheel(cx, cy, r){
+  r = r || 18;
+  const k = (r*0.7).toFixed(1);
+  return '<g class="wheel">'
+    + '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#c62828"/>'
+    + '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#7f1414" stroke-width="3"/>'
+    + '<circle cx="'+cx+'" cy="'+cy+'" r="'+(r*0.28).toFixed(1)+'" fill="#eceff1"/>'
+    + '<line x1="'+cx+'" y1="'+(cy-r)+'" x2="'+cx+'" y2="'+(cy+r)+'" stroke="#7f1414" stroke-width="2.5"/>'
+    + '<line x1="'+(cx-r)+'" y1="'+cy+'" x2="'+(cx+r)+'" y2="'+cy+'" stroke="#7f1414" stroke-width="2.5"/>'
+    + '<line x1="'+(cx-k)+'" y1="'+(cy-k)+'" x2="'+(cx+k)+'" y2="'+(cy+k)+'" stroke="#7f1414" stroke-width="2"/>'
+    + '<line x1="'+(cx-k)+'" y1="'+(cy+k)+'" x2="'+(cx+k)+'" y2="'+(cy-k)+'" stroke="#7f1414" stroke-width="2"/>'
+    + '</g>';
+}
 
 /** 形状タイプから のりものの SVG 中身を くみたてる。 */
 function vehicleBody(id){
@@ -484,6 +498,7 @@ function vehicleBody(id){
       + '<rect x="16" y="130" width="172" height="13" rx="4" fill="#37474f"/>'
       + wheel(58,150) + wheel(150,150) + wheel(184,152,15) + '</g>';
     case "garbage": return '<g class="veh">'
+      + '<path d="M16 142 L40 142 L40 96 Z" fill="#2f9d57"/>'
       + '<rect x="40" y="84" width="110" height="58" rx="8" fill="'+c+'"/>'
       + '<rect x="40" y="116" width="110" height="9" fill="#ffffff" opacity="0.5"/>'
       + '<rect x="150" y="94" width="56" height="48" rx="9" fill="'+c+'"/>'
@@ -529,15 +544,15 @@ function vehicleBody(id){
       + win(50,82,30,30) + win(92,82,30,30) + win(134,82,30,30)
       + '<rect x="172" y="82" width="24" height="42" rx="4" fill="#cfe9ff"/>'
       + '<rect x="36" y="120" width="168" height="10" fill="#ffffff" opacity="0.5"/>'
-      + wheel(70,150,12) + wheel(170,150,12)
-      + '<rect x="28" y="150" width="184" height="6" rx="3" fill="#90a4ae"/></g>';
+      + '<rect x="40" y="139" width="160" height="10" rx="3" fill="#37474f"/>'
+      + '<rect x="28" y="151" width="184" height="6" rx="3" fill="#90a4ae"/></g>';
     case "bullet": return '<g class="veh">'
       + '<path d="M30 78 L150 78 Q210 88 210 112 L210 130 Q210 138 200 138 L30 138 Q22 138 22 130 L22 86 Q22 78 30 78 Z" fill="#f7fbff"/>'
       + '<path d="M150 78 Q210 88 210 112 L150 112 Z" fill="'+c+'"/>'
       + '<rect x="22" y="112" width="188" height="12" fill="'+c+'"/>'
       + win(40,90,26,18) + win(74,90,26,18) + win(108,90,26,18)
-      + wheel(66,150,11) + wheel(168,150,11)
-      + '<rect x="22" y="150" width="188" height="6" rx="3" fill="#90a4ae"/></g>';
+      + '<rect x="34" y="137" width="164" height="10" rx="3" fill="#37474f"/>'
+      + '<rect x="22" y="151" width="188" height="6" rx="3" fill="#90a4ae"/></g>';
     case "steam": return '<g class="veh">'
       + '<rect x="40" y="92" width="122" height="42" rx="21" fill="'+c+'"/>'
       + '<circle cx="50" cy="113" r="12" fill="#546e7a"/>'
@@ -545,7 +560,7 @@ function vehicleBody(id){
       + win(158,80,34,26)
       + '<rect x="64" y="62" width="18" height="32" rx="3" fill="#546e7a"/><rect x="60" y="58" width="26" height="8" rx="3" fill="#546e7a"/>'
       + '<circle class="smoke" cx="73" cy="54" r="7" fill="#cfd8dc"/><circle class="smoke" cx="73" cy="54" r="9" fill="#e0e0e0" style="animation-delay:0.55s"/><circle class="smoke" cx="73" cy="54" r="6" fill="#cfd8dc" style="animation-delay:1.1s"/>'
-      + wheel(72,142,22) + wheel(150,144,14) + wheel(184,144,14) + '</g>';
+      + driveWheel(74,140,21) + driveWheel(152,146,13) + driveWheel(186,146,13) + '</g>';
     case "monorail": return '<rect x="20" y="134" width="200" height="16" rx="6" fill="#b0bec5"/>'
       + '<g class="fly"><rect x="36" y="68" width="168" height="58" rx="27" fill="'+c+'"/>'
       + win(50,82,34,24) + win(96,82,34,24) + win(142,82,34,24)
