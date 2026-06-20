@@ -382,7 +382,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.3.0";
+const APP_VERSION = "v0.4.0";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -1583,31 +1583,7 @@ const STORIES = [
     ] }
 ];
 
-/* ----------------------- 効果音タイプ（Web Audio 合成パラメータ） ----------------------- */
-/*
- * SOUND_PARAMS: 効果音タイプごとの 合成パラメータ。
- * playSound() が これを よんで オシレーター/ノイズで おとを つくる。
- * 自動再生は できないので 最初の タップで AudioContext を unlock してから つかう。
- */
-const SOUND_PARAMS = {
-  siren:    { kind:"siren",  f1:740, f2:480, segs:4, segDur:0.34, type:"sawtooth", gain:0.16 },
-  piipoo:   { kind:"piipoo", fHi:980, fLo:760, segs:4, segDur:0.45, type:"triangle", gain:0.16 },
-  firebell: { kind:"firebell", f1:720, f2:500, segs:3, segDur:0.34, type:"sawtooth", bellHz:1180, bells:4, gain:0.16 },
-  engine:   { kind:"engine", base:70, dur:1.4, gain:0.20 },
-  motor:    { kind:"motor",  base:180, dur:1.2, gain:0.14 },
-  dig:      { kind:"dig",    bursts:5, dur:1.2, gain:0.22 },
-  horn:     { kind:"horn",   f:420, beeps:2, beepDur:0.22, type:"square", gain:0.16 },
-  train:    { kind:"train",  thumps:6, dur:1.6, gain:0.22 },
-  whoosh:   { kind:"whoosh", dur:1.1, gain:0.18 },
-  steam:    { kind:"steam",  chuffs:4, dur:1.6, gain:0.20 },
-  rotor:    { kind:"rotor",  rate:14, dur:1.5, gain:0.18 },
-  jet:      { kind:"jet",    dur:1.6, gain:0.16 },
-  shiphorn: { kind:"shiphorn", f:150, dur:1.4, gain:0.20 },
-  rocket:   { kind:"rocket", dur:1.8, gain:0.18 },
-  bike:     { kind:"bike", base:130, dur:1.3, gain:0.16 },
-  race:     { kind:"race", base:240, dur:1.2, gain:0.14 },
-  bell:     { kind:"bell", f:1660, dings:3, gain:0.18 }
-};
+/* 効果音は playSound() が Web Audio で その場で合成する（タイプ別の合成は playSound 内に実装）。 */
 
 /* ============================== じょうたい ============================== */
 const STORE = {
@@ -1715,317 +1691,236 @@ function noiseBuffer(seconds){
   return buf;
 }
 
-/** 効果音タイプを Web Audio で 合成して ならす。 */
+/** 効果音タイプを Web Audio で 合成して ならす（リアリティ強化版）。 */
 function playSound(soundType){
   if (!audioCtx) return;
   if (audioCtx.state === "suspended") audioCtx.resume();
-  const p = SOUND_PARAMS[soundType];
-  if (!p) return;
-  const now = audioCtx.currentTime;
-  const out = audioCtx.createGain();
-  out.gain.value = p.gain || 0.15;
-  out.connect(audioCtx.destination);
+  const ctx = audioCtx;
+  const now = ctx.currentTime;
+  function out(gainVal){
+    const g = ctx.createGain(); g.gain.value = gainVal;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 14000;
+    g.connect(lp); lp.connect(ctx.destination);
+    return g;
+  }
 
-  switch (p.kind){
-    case "siren": {
-      const osc = audioCtx.createOscillator();
-      osc.type = p.type;
-      const g = audioCtx.createGain(); g.gain.value = 1;
-      osc.connect(g); g.connect(out);
-      let t = now;
-      for (let i=0;i<p.segs;i++){
-        osc.frequency.setValueAtTime(p.f1, t);
-        osc.frequency.linearRampToValueAtTime(p.f2, t + p.segDur*0.5);
-        osc.frequency.linearRampToValueAtTime(p.f1, t + p.segDur);
-        t += p.segDur;
-      }
-      osc.start(now); osc.stop(t + 0.02);
+  switch (soundType){
+    case "siren": { // パトカー：唸るウーウー（2基デチューン＋帯域フィルタ）
+      const o = out(0.18);
+      [0, 8].forEach(det => {
+        const osc = ctx.createOscillator(); osc.type = "sawtooth"; osc.detune.value = det;
+        const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800; lp.Q.value = 4;
+        let t = now;
+        for (let i=0;i<4;i++){ osc.frequency.setValueAtTime(620,t); osc.frequency.linearRampToValueAtTime(1020,t+0.34); osc.frequency.linearRampToValueAtTime(620,t+0.68); t+=0.68; }
+        osc.connect(lp); lp.connect(o); osc.start(now); osc.stop(t+0.05);
+      });
       break;
     }
-    case "piipoo": {
-      const osc = audioCtx.createOscillator();
-      osc.type = p.type;
-      const g = audioCtx.createGain();
-      let t = now;
-      for (let i=0;i<p.segs;i++){
-        osc.frequency.setValueAtTime(i % 2 === 0 ? p.fHi : p.fLo, t);
-        t += p.segDur;
-      }
-      g.gain.setValueAtTime(0.0001, now);
-      g.gain.linearRampToValueAtTime(1, now + 0.03);
-      g.gain.setValueAtTime(1, t - 0.05);
-      g.gain.linearRampToValueAtTime(0.0001, t);
-      osc.connect(g); g.connect(out);
-      osc.start(now); osc.stop(t + 0.02);
+    case "piipoo": { // 救急車：澄んだピーポー（基音＋オクターブ＋ビブラート）
+      const o = out(0.16);
+      let t = now; const seg = 0.5;
+      [960,770,960,770].forEach(f => {
+        const osc = ctx.createOscillator(); osc.type = "triangle"; osc.frequency.value = f;
+        const h = ctx.createOscillator(); h.type = "sine"; h.frequency.value = f*2;
+        const vib = ctx.createOscillator(); vib.frequency.value = 5; const vg = ctx.createGain(); vg.gain.value = 4; vib.connect(vg); vg.connect(osc.frequency);
+        const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(1,t+0.04); g.gain.setValueAtTime(1,t+seg-0.06); g.gain.linearRampToValueAtTime(0.0001,t+seg);
+        const hg = ctx.createGain(); hg.gain.value = 0.25; h.connect(hg); hg.connect(g);
+        osc.connect(g); g.connect(o);
+        osc.start(t); h.start(t); vib.start(t); osc.stop(t+seg); h.stop(t+seg); vib.stop(t+seg);
+        t += seg;
+      });
       break;
     }
-    case "firebell": {
-      const osc = audioCtx.createOscillator();
-      osc.type = p.type;
-      const g = audioCtx.createGain(); g.gain.value = 1;
-      osc.connect(g); g.connect(out);
-      let t = now;
-      for (let i=0;i<p.segs;i++){
-        osc.frequency.setValueAtTime(p.f1, t);
-        osc.frequency.linearRampToValueAtTime(p.f2, t + p.segDur*0.5);
-        osc.frequency.linearRampToValueAtTime(p.f1, t + p.segDur);
-        t += p.segDur;
-      }
-      osc.start(now); osc.stop(t + 0.02);
-      const total = t - now;
-      const step = total / p.bells;
-      for (let i=0;i<p.bells;i++){
+    case "firebell": { // 消防車：金属的な連打ベル
+      const o = out(0.16);
+      const total = 1.4, bells = 8, step = total/bells;
+      for (let i=0;i<bells;i++){
         const bt = now + i*step;
-        const bo = audioCtx.createOscillator();
-        bo.type = "square"; bo.frequency.value = p.bellHz;
-        const bo2 = audioCtx.createOscillator();
-        bo2.type = "square"; bo2.frequency.value = p.bellHz*1.5;
-        const bg = audioCtx.createGain();
-        bg.gain.setValueAtTime(0.0001, bt);
-        bg.gain.linearRampToValueAtTime(0.5, bt + 0.005);
-        bg.gain.exponentialRampToValueAtTime(0.0001, bt + 0.18);
-        bo.connect(bg); bo2.connect(bg); bg.connect(out);
-        bo.start(bt); bo2.start(bt); bo.stop(bt + 0.2); bo2.stop(bt + 0.2);
+        [1180,1772,2400,3100].forEach((f,k) => {
+          const bo = ctx.createOscillator(); bo.type = "square"; bo.frequency.value = f;
+          const bg = ctx.createGain(); const amp = [0.5,0.3,0.18,0.1][k];
+          bg.gain.setValueAtTime(0.0001,bt); bg.gain.linearRampToValueAtTime(amp,bt+0.004); bg.gain.exponentialRampToValueAtTime(0.0001,bt+0.16);
+          bo.connect(bg); bg.connect(o); bo.start(bt); bo.stop(bt+0.18);
+        });
       }
       break;
     }
-    case "bike": {
-      const osc = audioCtx.createOscillator();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(p.base, now);
-      osc.frequency.linearRampToValueAtTime(p.base*2.2, now + p.dur*0.5);
-      osc.frequency.linearRampToValueAtTime(p.base*1.6, now + p.dur);
-      const lfo = audioCtx.createOscillator(); lfo.frequency.value = 30;
-      const lg = audioCtx.createGain(); lg.gain.value = 20;
-      lfo.connect(lg); lg.connect(osc.frequency);
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.06);
-      g.gain.setValueAtTime(1, now + p.dur - 0.2); g.gain.linearRampToValueAtTime(0, now + p.dur);
-      osc.connect(g); g.connect(out);
-      osc.start(now); lfo.start(now); osc.stop(now + p.dur); lfo.stop(now + p.dur);
-      break;
-    }
-    case "race": {
-      const osc = audioCtx.createOscillator();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(p.base, now);
-      osc.frequency.exponentialRampToValueAtTime(p.base*4, now + p.dur*0.7);
-      osc.frequency.exponentialRampToValueAtTime(p.base*1.5, now + p.dur);
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + 0.05);
-      g.gain.linearRampToValueAtTime(0, now + p.dur);
-      osc.connect(g); g.connect(out);
-      osc.start(now); osc.stop(now + p.dur);
-      break;
-    }
-    case "bell": {
-      for (let i=0;i<p.dings;i++){
-        const t = now + i*0.3;
-        const o = audioCtx.createOscillator(); o.type = "square"; o.frequency.value = p.f;
-        const o2 = audioCtx.createOscillator(); o2.type = "square"; o2.frequency.value = p.f*1.5;
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5, t + 0.005);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
-        o.connect(g); o2.connect(g); g.connect(out);
-        o.start(t); o2.start(t); o.stop(t + 0.28); o2.stop(t + 0.28);
+    case "steam": { // 蒸気機関車：シュッシュッ（ノイズ吹出し）＋汽笛ポー
+      const o = out(0.20);
+      const chuffs = 5, dur = 1.7, seg = dur/chuffs*0.9;
+      for (let i=0;i<chuffs;i++){
+        const t = now + i*(dur/chuffs);
+        const src = ctx.createBufferSource(); src.buffer = noiseBuffer(seg);
+        const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.setValueAtTime(1400,t); bp.frequency.exponentialRampToValueAtTime(500,t+seg); bp.Q.value = 0.8;
+        const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.9,t+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+seg);
+        src.connect(bp); bp.connect(g); g.connect(o); src.start(t); src.stop(t+seg);
       }
+      const wt = now + dur*0.62;
+      [740,990].forEach((f,k) => {
+        const w = ctx.createOscillator(); w.type = "triangle"; w.frequency.value = f;
+        const wg = ctx.createGain(); wg.gain.setValueAtTime(0.0001,wt); wg.gain.linearRampToValueAtTime(k?0.18:0.3,wt+0.06); wg.gain.setValueAtTime(k?0.18:0.3,wt+0.5); wg.gain.exponentialRampToValueAtTime(0.0001,wt+0.8);
+        w.connect(wg); wg.connect(o); w.start(wt); w.stop(wt+0.85);
+      });
       break;
     }
-    case "engine": {
-      const osc = audioCtx.createOscillator();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(p.base, now);
-      osc.frequency.linearRampToValueAtTime(p.base*1.6, now + p.dur*0.4);
-      osc.frequency.linearRampToValueAtTime(p.base*1.2, now + p.dur);
-      const lfo = audioCtx.createOscillator(); lfo.frequency.value = 18;
-      const lg = audioCtx.createGain(); lg.gain.value = 14;
-      lfo.connect(lg); lg.connect(osc.frequency);
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(1, now + 0.08);
-      g.gain.setValueAtTime(1, now + p.dur - 0.2);
-      g.gain.linearRampToValueAtTime(0, now + p.dur);
-      osc.connect(g); g.connect(out);
-      osc.start(now); lfo.start(now);
-      osc.stop(now + p.dur); lfo.stop(now + p.dur);
+    case "jet": { // 飛行機：低い轟音＋掃引するノイズ
+      const o = out(0.16); const dur = 1.8;
+      const src = ctx.createBufferSource(); src.buffer = noiseBuffer(dur); src.loop = true;
+      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.6;
+      bp.frequency.setValueAtTime(400,now); bp.frequency.exponentialRampToValueAtTime(2600,now+dur*0.5); bp.frequency.exponentialRampToValueAtTime(1600,now+dur);
+      const ng = ctx.createGain(); ng.gain.setValueAtTime(0.0001,now); ng.gain.linearRampToValueAtTime(0.9,now+0.4); ng.gain.setValueAtTime(0.9,now+dur-0.5); ng.gain.linearRampToValueAtTime(0.0001,now+dur);
+      src.connect(bp); bp.connect(ng); ng.connect(o); src.start(now); src.stop(now+dur);
+      const rum = ctx.createOscillator(); rum.type = "sawtooth"; rum.frequency.value = 70;
+      const rg = ctx.createGain(); rg.gain.setValueAtTime(0.0001,now); rg.gain.linearRampToValueAtTime(0.3,now+0.4); rg.gain.linearRampToValueAtTime(0.0001,now+dur);
+      const rlp = ctx.createBiquadFilter(); rlp.type = "lowpass"; rlp.frequency.value = 200;
+      rum.connect(rlp); rlp.connect(rg); rg.connect(o); rum.start(now); rum.stop(now+dur);
       break;
     }
-    case "motor": {
-      const osc = audioCtx.createOscillator();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(p.base, now);
-      osc.frequency.linearRampToValueAtTime(p.base*1.3, now + p.dur);
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(1, now + 0.1);
-      g.gain.linearRampToValueAtTime(0, now + p.dur);
-      osc.connect(g); g.connect(out);
-      osc.start(now); osc.stop(now + p.dur);
+    case "shiphorn": { // 船：重低音の汽笛（倍音スタック＋ゆっくり膨らむ）
+      const o = out(0.22); const dur = 1.8, base = 130;
+      [1,2,3,4].forEach((h,k) => {
+        const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.value = base*h; osc.detune.value = (k%2?6:-4);
+        const g = ctx.createGain(); const amp = [0.5,0.3,0.16,0.08][k];
+        g.gain.setValueAtTime(0.0001,now); g.gain.linearRampToValueAtTime(amp,now+0.35); g.gain.setValueAtTime(amp,now+dur-0.5); g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+        osc.connect(g); g.connect(o); osc.start(now); osc.stop(now+dur);
+      });
       break;
     }
-    case "dig": {
-      const seg = p.dur / p.bursts;
-      for (let i=0;i<p.bursts;i++){
+    case "engine": { // 汎用エンジン：基音＋倍音＋アイドルのうねり
+      const o = out(0.18); const dur = 1.5, base = 58;
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900; lp.Q.value = 2; lp.connect(o);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(1,now+0.1); g.gain.setValueAtTime(1,now+dur-0.25); g.gain.linearRampToValueAtTime(0,now+dur); g.connect(lp);
+      [1,2,3].forEach((h,k) => {
+        const osc = ctx.createOscillator(); osc.type = "sawtooth"; osc.frequency.setValueAtTime(base*h,now); osc.frequency.linearRampToValueAtTime(base*1.5*h,now+dur*0.4); osc.frequency.linearRampToValueAtTime(base*1.2*h,now+dur);
+        const hg = ctx.createGain(); hg.gain.value = [0.6,0.3,0.15][k]; osc.connect(hg); hg.connect(g); osc.start(now); osc.stop(now+dur);
+      });
+      const lfo = ctx.createOscillator(); lfo.type = "square"; lfo.frequency.value = 16; const lg = ctx.createGain(); lg.gain.value = 0.35; lfo.connect(lg); lg.connect(g.gain); lfo.start(now); lfo.stop(now+dur);
+      break;
+    }
+    case "motor": { // モーター：高めの回転音（倍音＋ゆるい上昇）
+      const o = out(0.14); const dur = 1.2, base = 200;
+      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = base*3; bp.Q.value = 3; bp.connect(o);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(1,now+0.1); g.gain.setValueAtTime(1,now+dur-0.2); g.gain.linearRampToValueAtTime(0,now+dur); g.connect(bp);
+      [1,2].forEach((h,k) => {
+        const osc = ctx.createOscillator(); osc.type = "triangle"; osc.frequency.setValueAtTime(base*h,now); osc.frequency.linearRampToValueAtTime(base*1.3*h,now+dur);
+        const hg = ctx.createGain(); hg.gain.value = [0.7,0.3][k]; osc.connect(hg); hg.connect(g); osc.start(now); osc.stop(now+dur);
+      });
+      break;
+    }
+    case "dig": { // ショベル：ガリガリ（ざらつきノイズ＋金属クリン）
+      const o = out(0.20); const bursts = 5, dur = 1.3, seg = dur/bursts;
+      for (let i=0;i<bursts;i++){
         const t = now + i*seg;
-        const src = audioCtx.createBufferSource();
-        src.buffer = noiseBuffer(seg*0.6);
-        const bp = audioCtx.createBiquadFilter();
-        bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = 0.7;
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(1, t + 0.02);
-        g.gain.linearRampToValueAtTime(0, t + seg*0.6);
-        src.connect(bp); bp.connect(g); g.connect(out);
-        src.start(t); src.stop(t + seg*0.6);
+        const src = ctx.createBufferSource(); src.buffer = noiseBuffer(seg*0.7);
+        const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 700 + (i%2)*500; bp.Q.value = 0.8;
+        const g = ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(1,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+seg*0.7);
+        src.connect(bp); bp.connect(g); g.connect(o); src.start(t); src.stop(t+seg*0.7);
+        const o2 = ctx.createOscillator(); o2.type = "square"; o2.frequency.value = 1400 + (i%3)*300;
+        const g2 = ctx.createGain(); g2.gain.setValueAtTime(0.0001,t); g2.gain.linearRampToValueAtTime(0.12,t+0.005); g2.gain.exponentialRampToValueAtTime(0.0001,t+0.12);
+        o2.connect(g2); g2.connect(o); o2.start(t); o2.stop(t+0.14);
       }
       break;
     }
-    case "horn": {
-      for (let i=0;i<p.beeps;i++){
-        const t = now + i*(p.beepDur+0.1);
-        const osc = audioCtx.createOscillator();
-        osc.type = p.type; osc.frequency.value = p.f;
-        const osc2 = audioCtx.createOscillator();
-        osc2.type = p.type; osc2.frequency.value = p.f*1.5;
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(1, t + 0.02);
-        g.gain.setValueAtTime(1, t + p.beepDur - 0.04);
-        g.gain.linearRampToValueAtTime(0, t + p.beepDur);
-        osc.connect(g); osc2.connect(g); g.connect(out);
-        osc.start(t); osc2.start(t); osc.stop(t + p.beepDur); osc2.stop(t + p.beepDur);
+    case "horn": { // クラクション：2和音（基音＋長3度）×2回
+      const o = out(0.16);
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2500; lp.connect(o);
+      [0,0.32].forEach(off => {
+        const t = now + off;
+        [440,554].forEach(f => {
+          const osc = ctx.createOscillator(); osc.type = "sawtooth"; osc.frequency.value = f;
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.5,t+0.02); g.gain.setValueAtTime(0.5,t+0.24); g.gain.linearRampToValueAtTime(0.0001,t+0.28);
+          osc.connect(g); g.connect(lp); osc.start(t); osc.stop(t+0.3);
+        });
+      });
+      break;
+    }
+    case "train": { // 電車：ガタンゴトン（2連クラック）＋レールのシャー
+      const o = out(0.2); const dur = 1.8, pairs = 4, seg = dur/pairs;
+      for (let i=0;i<pairs;i++){
+        [0,0.11].forEach(off => {
+          const t = now + i*seg + off;
+          const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.setValueAtTime(150,t); osc.frequency.exponentialRampToValueAtTime(60,t+0.12);
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.9,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.14);
+          osc.connect(g); g.connect(o); osc.start(t); osc.stop(t+0.15);
+        });
       }
+      const src = ctx.createBufferSource(); src.buffer = noiseBuffer(dur);
+      const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 3000;
+      const ng = ctx.createGain(); ng.gain.value = 0.05; src.connect(hp); hp.connect(ng); ng.connect(o); src.start(now); src.stop(now+dur);
       break;
     }
-    case "train": {
-      const seg = p.dur / p.thumps;
-      for (let i=0;i<p.thumps;i++){
-        const t = now + i*seg;
-        const osc = audioCtx.createOscillator();
-        osc.type = "sine"; osc.frequency.setValueAtTime(120, t);
-        osc.frequency.linearRampToValueAtTime(60, t + seg*0.5);
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.9, t + 0.02);
-        g.gain.linearRampToValueAtTime(0, t + seg*0.5);
-        osc.connect(g); g.connect(out);
-        osc.start(t); osc.stop(t + seg*0.5);
-      }
+    case "whoosh": { // 新幹線：通過のびゅーん（ノイズ掃引＋ドップラー音）
+      const o = out(0.18); const dur = 1.1;
+      const src = ctx.createBufferSource(); src.buffer = noiseBuffer(dur);
+      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.4;
+      bp.frequency.setValueAtTime(500,now); bp.frequency.exponentialRampToValueAtTime(4000,now+dur*0.45); bp.frequency.exponentialRampToValueAtTime(500,now+dur);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(1,now+dur*0.4); g.gain.linearRampToValueAtTime(0,now+dur);
+      src.connect(bp); bp.connect(g); g.connect(o); src.start(now); src.stop(now+dur);
+      const osc = ctx.createOscillator(); osc.type = "triangle"; osc.frequency.setValueAtTime(700,now); osc.frequency.exponentialRampToValueAtTime(1400,now+dur*0.45); osc.frequency.exponentialRampToValueAtTime(500,now+dur);
+      const og = ctx.createGain(); og.gain.setValueAtTime(0.0001,now); og.gain.linearRampToValueAtTime(0.18,now+dur*0.4); og.gain.linearRampToValueAtTime(0.0001,now+dur);
+      osc.connect(og); og.connect(o); osc.start(now); osc.stop(now+dur);
       break;
     }
-    case "whoosh": {
-      const src = audioCtx.createBufferSource();
-      src.buffer = noiseBuffer(p.dur);
-      const bp = audioCtx.createBiquadFilter();
-      bp.type = "bandpass"; bp.Q.value = 1.2;
-      bp.frequency.setValueAtTime(400, now);
-      bp.frequency.linearRampToValueAtTime(3500, now + p.dur*0.5);
-      bp.frequency.linearRampToValueAtTime(500, now + p.dur);
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(1, now + p.dur*0.4);
-      g.gain.linearRampToValueAtTime(0, now + p.dur);
-      src.connect(bp); bp.connect(g); g.connect(out);
-      src.start(now); src.stop(now + p.dur);
+    case "rotor": { // ヘリ：ばたばた（ブレードチョップ＋タービン）
+      const o = out(0.18); const dur = 1.6, rate = 13;
+      const src = ctx.createBufferSource(); src.buffer = noiseBuffer(dur); src.loop = true;
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 700;
+      const g = ctx.createGain(); g.gain.value = 0; src.connect(lp); lp.connect(g); g.connect(o);
+      const lfo = ctx.createOscillator(); lfo.type = "square"; lfo.frequency.value = rate; const lg = ctx.createGain(); lg.gain.value = 0.5; lfo.connect(lg); lg.connect(g.gain); g.gain.setValueAtTime(0.5,now);
+      o.gain.setValueAtTime(0.18,now); o.gain.setValueAtTime(0.18,now+dur-0.3); o.gain.linearRampToValueAtTime(0.0001,now+dur);
+      const tw = ctx.createOscillator(); tw.type = "triangle"; tw.frequency.setValueAtTime(900,now); tw.frequency.linearRampToValueAtTime(1100,now+dur); const twg = ctx.createGain(); twg.gain.value = 0.05; tw.connect(twg); twg.connect(o);
+      src.start(now); lfo.start(now); tw.start(now); src.stop(now+dur); lfo.stop(now+dur); tw.stop(now+dur);
       break;
     }
-    case "steam": {
-      const seg = p.dur / p.chuffs;
-      for (let i=0;i<p.chuffs;i++){
-        const t = now + i*seg;
-        const src = audioCtx.createBufferSource();
-        src.buffer = noiseBuffer(seg*0.5);
-        const hp = audioCtx.createBiquadFilter();
-        hp.type = "highpass"; hp.frequency.value = 1200;
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.8, t + 0.03);
-        g.gain.linearRampToValueAtTime(0, t + seg*0.5);
-        src.connect(hp); hp.connect(g); g.connect(out);
-        src.start(t); src.stop(t + seg*0.5);
-      }
-      // さいごに きてき
-      const osc = audioCtx.createOscillator();
-      osc.type = "sine"; osc.frequency.value = 520;
-      const og = audioCtx.createGain();
-      const tt = now + p.dur - 0.3;
-      og.gain.setValueAtTime(0, tt);
-      og.gain.linearRampToValueAtTime(0.9, tt + 0.05);
-      og.gain.linearRampToValueAtTime(0, tt + 0.3);
-      osc.connect(og); og.connect(out);
-      osc.start(tt); osc.stop(tt + 0.3);
+    case "rocket": { // ロケット：轟音の膨らみ＋低い唸り＋上昇するぴゅーん
+      const o = out(0.18); const dur = 1.8;
+      const src = ctx.createBufferSource(); src.buffer = noiseBuffer(dur);
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(400,now); lp.frequency.linearRampToValueAtTime(1200,now+dur*0.5);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.2,now); g.gain.linearRampToValueAtTime(1,now+dur*0.5); g.gain.linearRampToValueAtTime(0,now+dur);
+      src.connect(lp); lp.connect(g); g.connect(o); src.start(now); src.stop(now+dur);
+      const rum = ctx.createOscillator(); rum.type = "sawtooth"; rum.frequency.value = 55; const rg = ctx.createGain(); rg.gain.setValueAtTime(0.0001,now); rg.gain.linearRampToValueAtTime(0.4,now+0.3); rg.gain.linearRampToValueAtTime(0.0001,now+dur);
+      const rlp = ctx.createBiquadFilter(); rlp.type = "lowpass"; rlp.frequency.value = 160; rum.connect(rlp); rlp.connect(rg); rg.connect(o); rum.start(now); rum.stop(now+dur);
+      const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.setValueAtTime(220,now); osc.frequency.exponentialRampToValueAtTime(2000,now+dur);
+      const og = ctx.createGain(); og.gain.setValueAtTime(0.0001,now+dur*0.4); og.gain.linearRampToValueAtTime(0.4,now+dur*0.7); og.gain.linearRampToValueAtTime(0.0001,now+dur);
+      osc.connect(og); og.connect(o); osc.start(now); osc.stop(now+dur);
       break;
     }
-    case "rotor": {
-      const src = audioCtx.createBufferSource();
-      src.buffer = noiseBuffer(p.dur); src.loop = true;
-      const lp = audioCtx.createBiquadFilter();
-      lp.type = "lowpass"; lp.frequency.value = 800;
-      const g = audioCtx.createGain(); g.gain.value = 0;
-      // チョップ（はやい おんりょう へんか）
-      const lfo = audioCtx.createOscillator();
-      lfo.type = "square"; lfo.frequency.value = p.rate;
-      const lg = audioCtx.createGain(); lg.gain.value = 0.5;
-      lfo.connect(lg); lg.connect(g.gain);
-      g.gain.setValueAtTime(0.5, now);
-      src.connect(lp); lp.connect(g); g.connect(out);
-      src.start(now); lfo.start(now);
-      src.stop(now + p.dur); lfo.stop(now + p.dur);
+    case "bike": { // オートバイ：ぶろろろ（低いサウ＋アイドルのチョップ）
+      const o = out(0.16); const dur = 1.4, base = 120;
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1400; lp.Q.value = 2; lp.connect(o);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(1,now+0.06); g.gain.setValueAtTime(1,now+dur-0.2); g.gain.linearRampToValueAtTime(0,now+dur); g.connect(lp);
+      [1,2].forEach((h,k) => {
+        const osc = ctx.createOscillator(); osc.type = "sawtooth"; osc.frequency.setValueAtTime(base*h,now); osc.frequency.linearRampToValueAtTime(base*2.2*h,now+dur*0.5); osc.frequency.linearRampToValueAtTime(base*1.6*h,now+dur);
+        const hg = ctx.createGain(); hg.gain.value = [0.7,0.3][k]; osc.connect(hg); hg.connect(g); osc.start(now); osc.stop(now+dur);
+      });
+      const lfo = ctx.createOscillator(); lfo.type = "square"; lfo.frequency.value = 26; const lg = ctx.createGain(); lg.gain.value = 0.3; lfo.connect(lg); lg.connect(g.gain); lfo.start(now); lfo.stop(now+dur);
       break;
     }
-    case "jet": {
-      const src = audioCtx.createBufferSource();
-      src.buffer = noiseBuffer(p.dur);
-      const lp = audioCtx.createBiquadFilter();
-      lp.type = "lowpass";
-      lp.frequency.setValueAtTime(300, now);
-      lp.frequency.linearRampToValueAtTime(4000, now + p.dur*0.6);
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(1, now + p.dur*0.5);
-      g.gain.linearRampToValueAtTime(0, now + p.dur);
-      src.connect(lp); lp.connect(g); g.connect(out);
-      src.start(now); src.stop(now + p.dur);
+    case "race": { // レーシングカー：高回転のレブ＋シフト
+      const o = out(0.13); const dur = 1.3, base = 240;
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 4000; lp.connect(o);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(1,now+0.05); g.gain.setValueAtTime(1,now+dur-0.15); g.gain.linearRampToValueAtTime(0,now+dur); g.connect(lp);
+      [1,2].forEach((h,k) => {
+        const osc = ctx.createOscillator(); osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(base*h,now);
+        osc.frequency.exponentialRampToValueAtTime(base*4*h,now+dur*0.55);
+        osc.frequency.exponentialRampToValueAtTime(base*2*h,now+dur*0.62);
+        osc.frequency.exponentialRampToValueAtTime(base*4.5*h,now+dur);
+        const hg = ctx.createGain(); hg.gain.value = [0.7,0.3][k]; osc.connect(hg); hg.connect(g); osc.start(now); osc.stop(now+dur);
+      });
       break;
     }
-    case "shiphorn": {
-      const osc = audioCtx.createOscillator();
-      osc.type = "sawtooth"; osc.frequency.value = p.f;
-      const osc2 = audioCtx.createOscillator();
-      osc2.type = "sine"; osc2.frequency.value = p.f*1.01;
-      const lp = audioCtx.createBiquadFilter();
-      lp.type = "lowpass"; lp.frequency.value = 600;
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(1, now + 0.15);
-      g.gain.setValueAtTime(1, now + p.dur - 0.3);
-      g.gain.linearRampToValueAtTime(0, now + p.dur);
-      osc.connect(lp); osc2.connect(lp); lp.connect(g); g.connect(out);
-      osc.start(now); osc2.start(now); osc.stop(now + p.dur); osc2.stop(now + p.dur);
-      break;
-    }
-    case "rocket": {
-      const src = audioCtx.createBufferSource();
-      src.buffer = noiseBuffer(p.dur);
-      const lp = audioCtx.createBiquadFilter();
-      lp.type = "lowpass"; lp.frequency.value = 500;
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0.2, now);
-      g.gain.linearRampToValueAtTime(1, now + p.dur*0.5);
-      g.gain.linearRampToValueAtTime(0, now + p.dur);
-      src.connect(lp); lp.connect(g); g.connect(out);
-      // のぼっていく ぴゅーん
-      const osc = audioCtx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(200, now);
-      osc.frequency.exponentialRampToValueAtTime(1800, now + p.dur);
-      const og = audioCtx.createGain();
-      og.gain.setValueAtTime(0.0001, now);
-      og.gain.linearRampToValueAtTime(0.5, now + 0.2);
-      og.gain.linearRampToValueAtTime(0, now + p.dur);
-      osc.connect(og); og.connect(out);
-      src.start(now); osc.start(now);
-      src.stop(now + p.dur); osc.stop(now + p.dur);
+    case "bell": { // 自転車：明るい金属ディン（非整数倍音）×2
+      const o = out(0.18);
+      [0,0.32].forEach(off => {
+        const t = now + off;
+        [1660,1660*2.76,1660*5.4].forEach((f,k) => {
+          const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.value = f;
+          const g = ctx.createGain(); const amp = [0.5,0.25,0.12][k];
+          g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(amp,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+          osc.connect(g); g.connect(o); osc.start(t); osc.stop(t+0.55);
+        });
+      });
       break;
     }
   }
@@ -2095,10 +1990,15 @@ function tapM1(){
 }
 
 /* ============================== ② 音・まね遊び ============================== */
+/* おと・まね 出題プール：音タイプごとの代表1台のみ（似た音の重複を避け、特徴的な音に絞る）。 */
+const M2_REP_IDS = ["shoubou","patokaa","kyuukyuu","truck","crane","shovel","car","densha","shinkansen","kikansha","heli","hikouki","fune","rocket","moto","racecar","bicycle"];
+const M2_POOL = VEHICLES.filter(v => M2_REP_IDS.includes(v.id));
+
 function enterM2(){
-  let v = pickRandom(VEHICLES);
-  if (State.m2 && VEHICLES.length > 1){
-    while (v.id === State.m2.id) v = pickRandom(VEHICLES);
+  const pool = M2_POOL.length ? M2_POOL : VEHICLES;
+  let v = pickRandom(pool);
+  if (State.m2 && pool.length > 1){
+    while (v.id === State.m2.id) v = pickRandom(pool);
   }
   State.m2 = v;
   document.getElementById("m2Card").innerHTML = buildVehicleSVG(v);
