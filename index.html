@@ -40,6 +40,8 @@
     user-select:none; -webkit-user-select:none;
     touch-action:manipulation;
     overscroll-behavior:none;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
   }
   .stripes{
     height:14px;
@@ -95,6 +97,11 @@
     background:#fff; border:5px solid var(--amber); border-radius:26px;
     padding:22px; width:100%; max-width:420px; box-shadow:0 10px 0 rgba(0,0,0,.08);
   }
+  /* はみだしても うえが きれない よう auto マージンで ちゅうおう よせ */
+  #setup,#parent{ justify-content:flex-start; overflow-y:auto; }
+  #setup .mascot{ margin-top:auto; }
+  #setup .panel{ margin-top:18px; margin-bottom:auto; }
+  #parent .panel{ margin:auto 0; }
   .lbl{ font-size:20px; font-weight:800; color:var(--orange); margin-bottom:8px; }
   #nameInput,#nameInput2{
     width:100%; font-family:inherit; font-size:30px; text-align:center; font-weight:800;
@@ -121,9 +128,10 @@
     border:none; background:var(--ink); color:#fff; font-family:inherit; font-weight:800;
     font-size:18px; padding:12px 18px; border-radius:18px; cursor:pointer;
     box-shadow:0 5px 0 rgba(0,0,0,.18);
+    white-space:nowrap;
   }
   .backbtn:active{ transform:translateY(4px); box-shadow:0 1px 0 rgba(0,0,0,.18); }
-  .modetitle{ font-size:22px; font-weight:900; color:var(--orange); }
+  .modetitle{ font-size:clamp(16px, 4.5vw, 22px); font-weight:900; color:var(--orange); white-space:nowrap; flex:1; text-align:center; }
 
   /* これなあに / 音まね の大きな絵 */
   .stage{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
@@ -134,6 +142,7 @@
     box-shadow:0 12px 0 rgba(0,0,0,.16); cursor:pointer;
     transition:transform .1s, filter .1s;
     background:#fff; border:6px solid var(--amber);
+    overflow:hidden;
   }
   .card:active{ transform:scale(.96); filter:brightness(1.05); }
   .card.pop{ animation:popa .4s ease; }
@@ -143,7 +152,7 @@
   .nextbtn{ background:var(--amber); font-size:24px; padding:20px; width:100%; max-width:360px; margin-top:6px; }
 
   /* お話 */
-  #story .picker{ display:flex; gap:14px; width:100%; max-width:420px; margin:auto; }
+  #m3 .picker{ display:flex; gap:14px; width:100%; max-width:420px; }
   .pickbtn{ flex:1; font-size:24px; padding:30px 12px; flex-direction:column; gap:8px; }
   .pickbtn.short{ background:var(--green); }
   .pickbtn.long{ background:var(--blue); }
@@ -168,6 +177,8 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
     font-size:54px; cursor:pointer; position:relative;
   }
+  .cell.locked.shake{ animation:shakev .4s ease; }
+  @keyframes shakev{ 0%,100%{ transform:translateX(0) } 25%{ transform:translateX(-5px) rotate(-2deg) } 50%{ transform:translateX(5px) rotate(2deg) } 75%{ transform:translateX(-3px) } }
   .cell .nm{ font-size:13px; font-weight:800; color:#90a4ae; }
   .cell.locked .emoji{ filter:grayscale(1) brightness(0) opacity(.25); }
   .cell.unlocked{ background:#fff; border-color:var(--amber); box-shadow:0 5px 0 rgba(0,0,0,.08); }
@@ -177,7 +188,7 @@
 
   /* 保護者ゲート長押しヒント（極小） */
   #parent .panel .row2{ display:flex; gap:12px; margin-top:8px; }
-  #parent .panel .row2 .bigbtn{ font-size:20px; padding:16px; }
+  #parent .panel .row2 .bigbtn{ font-size:17px; padding:14px 8px; gap:8px; white-space:nowrap; }
   .voicebtn{ background:var(--blue); }
   .savebtn{ background:var(--green); }
   .closebtn{ background:var(--ink); }
@@ -190,7 +201,7 @@
   .cell .emoji{ display:flex; align-items:center; justify-content:center; height:62px; font-size:0; }
   .cell .emoji svg.svgveh{ width:78px; height:58px; }
   .storyhead{ display:flex; justify-content:center; }
-  .storyhead svg.svgveh{ width:128px; height:96px; }
+  .storyhead svg.svgveh{ width:128px; height:96px; overflow:hidden; }
   .mascot svg.svgveh{ width:104px; height:78px; }
   .topbar .mascot svg.svgveh{ width:76px; height:58px; }
   .svgveh .wheel{ transform-box:fill-box; transform-origin:center; animation:spin 1.05s linear infinite; }
@@ -232,6 +243,22 @@
   .voiceguide{ margin-top:8px; font-size:14px; color:#555; }
   .voiceguide summary{ cursor:pointer; font-weight:800; color:var(--blue); }
   .voiceguide ol{ margin:8px 0 0; padding-left:18px; line-height:1.7; }
+
+  /* ===== よこむき（landscape）レイアウト ===== */
+  @media (orientation: landscape) and (max-height: 500px){
+    .menu{ display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:640px; }
+    .modebtn{ font-size:20px; padding:14px 10px; }
+    .garagebtn{ font-size:19px; padding:14px 10px; }
+    .topbar .mascot svg.svgveh{ width:56px; height:42px; }
+    .speech{ font-size:16px; padding:6px 12px; }
+    .card{ width:min(46vh,330px); height:min(46vh,330px); border-radius:24px; }
+    .nameplate{ font-size:24px; min-height:30px; }
+    .nextbtn{ font-size:18px; padding:10px; max-width:300px; }
+    .storyhead svg.svgveh{ width:84px; height:64px; }
+    #start .title{ font-size:30px; }
+    #start .row{ font-size:32px; margin:4px 0 12px; }
+    #startBtn{ font-size:24px; padding:16px 24px; max-width:300px; }
+  }
 </style>
 </head>
 <body>
@@ -249,7 +276,7 @@
 <section id="setup" class="screen center">
   <div class="mascot">🚒</div>
   <div class="speech">こんにちは！ ぶーぶーだよ。<br>おなまえを おしえてね。</div>
-  <div class="panel" style="margin-top:18px;">
+  <div class="panel">
     <div class="lbl">おこさんの おなまえ</div>
     <input id="nameInput" type="text" inputmode="text" maxlength="10" placeholder="なまえ" autocomplete="off" />
     <button id="setupSave" class="bigbtn savebtn" style="margin-top:16px;font-size:24px;padding:18px;">
@@ -382,7 +409,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.4.0";
+const APP_VERSION = "v0.4.1";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -2100,6 +2127,10 @@ function renderGarage(){
         speak(v.name);
         cell.style.transform = "scale(0.92)";
         setTimeout(() => cell.style.transform = "", 120);
+      });
+    } else {
+      cell.addEventListener("click", () => {
+        cell.classList.remove("shake"); void cell.offsetWidth; cell.classList.add("shake");
       });
     }
     grid.appendChild(cell);
