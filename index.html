@@ -97,11 +97,11 @@
     background:#fff; border:5px solid var(--amber); border-radius:26px;
     padding:22px; width:100%; max-width:420px; box-shadow:0 10px 0 rgba(0,0,0,.08);
   }
-  /* はみだしても うえが きれない よう auto マージンで ちゅうおう よせ */
-  #setup,#parent{ justify-content:flex-start; overflow-y:auto; }
-  #setup .mascot{ margin-top:auto; }
-  #setup .panel{ margin-top:18px; margin-bottom:auto; }
-  #parent .panel{ margin:auto 0; }
+  /* はみだしても うえが きれない よう auto マージンで ちゅうおう よせ（スクロール可能な画面に付与） */
+  .center.scrollsafe{ justify-content:flex-start; overflow-y:auto; }
+  .center.scrollsafe > :first-child{ margin-top:auto; }
+  .center.scrollsafe > :last-child{ margin-bottom:auto; }
+  #setup .panel{ margin-top:18px; }
   .lbl{ font-size:20px; font-weight:800; color:var(--orange); margin-bottom:8px; }
   #nameInput,#nameInput2{
     width:100%; font-family:inherit; font-size:30px; text-align:center; font-weight:800;
@@ -273,7 +273,7 @@
 </section>
 
 <!-- ========== なまえ せってい ========== -->
-<section id="setup" class="screen center">
+<section id="setup" class="screen center scrollsafe">
   <div class="mascot">🚒</div>
   <div class="speech">こんにちは！ ぶーぶーだよ。<br>おなまえを おしえてね。</div>
   <div class="panel">
@@ -371,7 +371,7 @@
 </section>
 
 <!-- ========== 保護者ゲート（設定） ========== -->
-<section id="parent" class="screen center">
+<section id="parent" class="screen center scrollsafe">
   <div class="panel">
     <div class="lbl">⚙️ ほごしゃの せってい</div>
     <div style="font-size:16px;color:#666;margin-bottom:10px;">なまえの へんこう</div>
@@ -1974,6 +1974,11 @@ function go(target){
 /* ----------- ヘルパ：ランダム ----------- */
 function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
+/* ----------- ヘルパ：CSSアニメーションの さいじっこう ----------- */
+function retriggerAnim(el, cls){
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+}
+
 /* ----------- ガレージ 追加 ----------- */
 function addToGarage(id){
   if (!State.garage.has(id)){
@@ -2011,8 +2016,7 @@ function enterM1(){
 function tapM1(){
   const v = State.m1; if (!v) return;
   document.getElementById("m1Name").textContent = v.name;
-  const card = document.getElementById("m1Card");
-  card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
+  retriggerAnim(document.getElementById("m1Card"), "pop");
   speak(v.name + "。" + v.word);
 }
 
@@ -2036,8 +2040,7 @@ function enterM2(){
 function tapM2(){
   const v = State.m2; if (!v) return;
   document.getElementById("m2Onoma").textContent = v.onoma;
-  const card = document.getElementById("m2Card");
-  card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
+  retriggerAnim(document.getElementById("m2Card"), "pop");
   playSound(v.sound);
   // 効果音の あとに オノマトペを よみあげ
   setTimeout(() => speak(v.onoma), 900);
@@ -2129,9 +2132,7 @@ function renderGarage(){
         setTimeout(() => cell.style.transform = "", 120);
       });
     } else {
-      cell.addEventListener("click", () => {
-        cell.classList.remove("shake"); void cell.offsetWidth; cell.classList.add("shake");
-      });
+      cell.addEventListener("click", () => retriggerAnim(cell, "shake"));
     }
     grid.appendChild(cell);
   });
