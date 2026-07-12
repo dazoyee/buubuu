@@ -44,3 +44,4 @@
 - **データ整合**: のりもの・お話・効果音の参照（`id`／`shape`／`sound`）が一致しているか検証する。
 - **リリース時のバージョン更新**: `index.html` の `APP_VERSION` と `service-worker.js` の `CACHE` を必ず一緒に更新する（詳細は CONTRIBUTING.md の「バージョニング」を参照）。
 - **コーディング規約・コミット規約**: [CONTRIBUTING.md](./CONTRIBUTING.md) に従う。
+- **ブランチ運用**: feature ブランチを作成せず、常に `main` 上で直接コミットして push する。
