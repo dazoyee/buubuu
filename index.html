@@ -154,6 +154,7 @@
   .modebtn.m2{ background:var(--blue); }
   .modebtn.m3{ background:var(--green); }
   .modebtn.m4{ background:var(--purple); }
+  .modebtn.m5{ background:#00acc1; }
   .garagebtn{ background:var(--orange); font-size:23px; padding:18px; }
 
   /* モード共通ヘッダ */
@@ -309,6 +310,54 @@
   .voiceguide summary{ cursor:pointer; font-weight:800; color:var(--blue); }
   .voiceguide ol{ margin:8px 0 0; padding-left:18px; line-height:1.7; }
 
+  /* ===== のりものパレード（A-3・ながめる）===== */
+  .paradestage{
+    flex:1; position:relative; overflow:hidden; margin-top:10px;
+    border-radius:28px; border:5px solid var(--amber); box-shadow:0 8px 0 rgba(0,0,0,.08);
+    background:linear-gradient(180deg,#bfe4ff 0%,#eaf6ff 55%,#dcefe0 100%);
+  }
+  .paradestage::after{
+    content:""; position:absolute; left:0; right:0; bottom:16%; height:6px; opacity:.8;
+    background:repeating-linear-gradient(90deg,#fff 0 22px, transparent 22px 44px);
+  }
+  .paradeveh{ position:absolute; bottom:18%; left:-32%; width:150px; }
+  .paradeveh svg.svgveh{ width:150px; height:112px; display:block; }
+  .paradeveh.crossing{ animation-name:paradeCross; animation-timing-function:linear; animation-fill-mode:forwards; }
+  @keyframes paradeCross{ from{ left:-32%; } to{ left:118%; } }
+  /* うごきを へらす せってい：よこぎりを やめて まんなかに じゅんばんに ひょうじ */
+  .paradestage.reduced{ display:flex; align-items:center; justify-content:center; }
+  .paradestage.reduced::after{ display:none; }
+  .paradestage.reduced .paradeveh{ position:static; width:min(56vw,220px); animation:none !important; }
+  .paradestage.reduced .paradeveh svg.svgveh{ width:100%; height:auto; }
+
+  /* ===== おやすみ画面（C-1 タイマー到達）===== */
+  #oyasumi{
+    overflow:hidden; color:#fff;
+    background:linear-gradient(180deg,#0d1a35 0%,#1c2b52 30%,#3b4d82 62%,#7683b9 100%);
+  }
+  #oyasumi::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background-repeat:no-repeat;
+    background-image:
+      radial-gradient(1.6px 1.6px at 18% 14%, rgba(255,255,255,.9), transparent 60%),
+      radial-gradient(1.2px 1.2px at 42% 8%,  rgba(255,255,255,.75), transparent 60%),
+      radial-gradient(1.6px 1.6px at 66% 18%, rgba(255,255,255,.85), transparent 60%),
+      radial-gradient(1.2px 1.2px at 82% 10%, rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(1.2px 1.2px at 30% 22%, rgba(255,255,255,.6), transparent 60%);
+    animation:todTwinkle 3.6s ease-in-out infinite;
+  }
+  .oyagear{ position:absolute; top:calc(var(--safe-top) + 10px); right:14px; background:rgba(255,255,255,.16); opacity:.7; z-index:2; }
+  .oyagear .gearico{ filter:none; }
+  .oyamoon{ font-size:60px; filter:drop-shadow(0 4px 0 rgba(0,0,0,.25)); animation:bob 3s ease-in-out infinite; }
+  .oyastage{ position:relative; height:120px; width:100%; overflow:hidden; margin:8px 0; }
+  .oyaveh{ position:absolute; bottom:6px; left:22%; width:150px; }
+  .oyaveh svg.svgveh{ width:150px; height:112px; display:block; }
+  .oyaveh.go{ animation:oyaDrive 7s ease-in forwards; }
+  @keyframes oyaDrive{ 0%{ transform:translateX(0); opacity:1; } 80%{ opacity:1; } 100%{ transform:translateX(150vw); opacity:0; } }
+  .oyaspeech{ background:#fff; color:var(--ink); position:relative; z-index:1; }
+  .oyazzz{ font-size:30px; margin-top:10px; opacity:.85; animation:bob 2.2s ease-in-out infinite; position:relative; z-index:1; }
+  @media (prefers-reduced-motion: reduce){ #oyasumi::before{ animation:none; } .oyaveh.go{ animation:none; transform:none; opacity:1; left:38%; } }
+
   /* ===== よこむき（landscape）レイアウト ===== */
   @media (orientation: landscape) and (max-height: 500px){
     .menu{ display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:640px; }
@@ -323,6 +372,9 @@
     #start .title{ font-size:30px; }
     #start .row{ font-size:32px; margin:4px 0 12px; }
     #startBtn{ font-size:24px; padding:16px 24px; max-width:300px; }
+    .paradeveh{ width:104px; } .paradeveh svg.svgveh{ width:104px; height:78px; }
+    .oyastage{ height:84px; } .oyaveh{ width:104px; } .oyaveh svg.svgveh{ width:104px; height:78px; }
+    .oyamoon{ font-size:44px; }
   }
 </style>
 </head>
@@ -363,6 +415,7 @@
     <button class="bigbtn modebtn m2" data-go="m2"><span class="ico">🔊</span>おと・まね あそび</button>
     <button class="bigbtn modebtn m3" data-go="m3"><span class="ico">📖</span>みじかい おはなし</button>
     <button class="bigbtn modebtn m4" data-go="m4"><span class="ico">🎯</span>どっちかな？</button>
+    <button class="bigbtn modebtn m5" data-go="parade"><span class="ico">🎪</span>ぱれーど</button>
     <button class="bigbtn garagebtn" data-go="garage"><span class="ico">🏠</span>ガレージ（ずかん）</button>
   </div>
 </section>
@@ -454,6 +507,16 @@
   <div class="grid" id="garageGrid"></div>
 </section>
 
+<!-- ========== ⑤ のりものパレード（ながめる） ========== -->
+<section id="parade" class="screen">
+  <div class="modehead">
+    <button class="backbtn" data-go="home">◀ もどる</button>
+    <div class="modetitle">のりもの ぱれーど</div>
+    <div style="width:78px"></div>
+  </div>
+  <div class="paradestage" id="paradeStage"></div>
+</section>
+
 <!-- ========== 保護者ゲート（設定） ========== -->
 <section id="parent" class="screen center scrollsafe">
   <div class="panel">
@@ -501,11 +564,31 @@
       <span class="rangeval" id="speechRateLabel">0.88</span>
     </div>
 
+    <div class="sublbl">😴 おやすみタイマー（あそぶ じかんを きめる）</div>
+    <div class="nightrow">
+      <select id="timerSelect" class="selfield" aria-label="おやすみタイマー" style="flex:1;">
+        <option value="off">おやすみ なし</option>
+        <option value="10">10ぷん</option>
+        <option value="20">20ぷん</option>
+        <option value="30">30ぷん</option>
+      </select>
+    </div>
+
     <div class="note">
       「こえテスト」で にほんごの こえが でるか かくにん できます。<br>
-      この がめんは おとなが 3びょう ながおしで ひらきます。
+      この がめんは おとなが 3びょう ながおしで ひらきます。<br>
+      おやすみタイマーは、この がめんで「おやすみ なし」に もどすまで つづきます。
     </div>
   </div>
+</section>
+
+<!-- ========== おやすみ画面（C-1：タイマー到達） ========== -->
+<section id="oyasumi" class="screen center">
+  <button class="gearbtn oyagear" id="oyasumiGear" aria-label="ほごしゃ"><span class="gearfill"></span><span class="gearico">⚙️</span></button>
+  <div class="oyamoon">🌙</div>
+  <div class="oyastage"><div class="oyaveh" id="oyasumiVeh"></div></div>
+  <div class="speech oyaspeech">きょうは おしまい！<br>いっぱい あそんだね。<br>また あした あそぼうね。</div>
+  <div class="oyazzz">💤</div>
 </section>
 
 <div class="stripes" style="position:fixed;left:0;right:0;bottom:0;z-index:-1;"></div>
@@ -519,7 +602,10 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.6.0";
+const APP_VERSION = "v0.7.0";
+
+/** アプリを ひらいた じこく（おやすみタイマー C-1 の きじゅん。セッション内のみで つかう）。 */
+const SESSION_START = Date.now();
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -1731,8 +1817,15 @@ const STORE = {
   nightMode:  "buubuu.nightMode",   // "1"/"0"（よるモード オン/オフ。既定 オン）
   nightStart: "buubuu.nightStart",  // "18"/"19"/"20"（よるモードの はじまる じこく。既定 19）
   sfxVol:     "buubuu.sfxVol",      // 0〜100（こうかおんの おおきさ %。既定 100）
-  speechRate: "buubuu.speechRate"   // 0.7〜1.2（よみあげの はやさ。既定 0.88）
+  speechRate: "buubuu.speechRate",  // 0.7〜1.2（よみあげの はやさ。既定 0.88）
+  timer:      "buubuu.timer"        // "off"/"10"/"20"/"30"（おやすみタイマー。既定 off）
 };
+
+/** おやすみタイマーの せっちを localStorage から よみこむ。きめられた値いがいは既定(off)。 */
+function loadTimerPref(){
+  const v = localStorage.getItem(STORE.timer);
+  return (v === "10" || v === "20" || v === "30") ? v : "off";
+}
 
 const State = {
   name: localStorage.getItem(STORE.name) || "",
@@ -1743,6 +1836,11 @@ const State = {
   nightStart: loadNum(STORE.nightStart, 19, 18, 20),
   sfxVol: loadNum(STORE.sfxVol, 100, 0, 100),
   speechRate: loadNum(STORE.speechRate, 0.88, 0.7, 1.2),
+  timer: loadTimerPref(),  // "off"/"10"/"20"/"30"
+  timerWarned: false,      // のこり2ふん よこくを もう はなしたか（セッション内で いちどだけ）
+  paradeActive: false,     // ぱれーど がめんが うごいているか（後始末の めやす）
+  paradeQueue: [],
+  paradeIdx: 0,
   audioReady: false,
   jaVoice: null,
   m1: null,   // げんざいの のりもの(これなあに)
@@ -1821,6 +1919,34 @@ function sfxGainFactor(){
   return vol * (isNightModeActive() ? 0.5 : 1);
 }
 
+/* ============================== おやすみタイマー（C-1） ==============================
+   アプリを ひらいてから の けいか じかん（SESSION_START）だけで はんてい。
+   にちをまたぐ もちこしは しない（あたらしく ひらけば つうじょう きどう）。 */
+
+/** #parent・#oyasumi・#start・#setup の あいだは、じどう いこう で じゃましない
+    （ほごしゃが せっていちゅう／すでに おやすみ がめん の ときは たいしょう外）。 */
+function isTimerExemptScreen(){
+  const el = document.querySelector(".screen.active");
+  const id = el && el.id;
+  return id === "parent" || id === "oyasumi" || id === "start" || id === "setup";
+}
+
+/** 5びょうごとに よばれ、のこり2ふん よこく／じかん到達の おやすみ画面いこうを はんていする。 */
+function checkBedtimeTimer(){
+  if (State.timer === "off") return;
+  if (isTimerExemptScreen()) return;
+  const totalMs = parseInt(State.timer, 10) * 60000;
+  const remaining = totalMs - (Date.now() - SESSION_START);
+  if (remaining <= 0){
+    go("oyasumi");
+    return;
+  }
+  if (!State.timerWarned && remaining <= 120000){
+    State.timerWarned = true;
+    speak("もうすこしで おしまいだよ");
+  }
+}
+
 /* ============================== 音声（Web Speech） ============================== */
 let audioCtx = null;
 
@@ -1850,16 +1976,22 @@ if ("speechSynthesis" in window){
   speechSynthesis.onvoiceschanged = pickJaVoice;
 }
 
-/** よみあげる。やさしい こえ・やや おそめ で こてい。 */
-function speak(text){
+/**
+ * よみあげる。やさしい こえ・やや おそめ で こてい。
+ * opts.rateMul / opts.volMul で はやさ・おおきさを さらに かけあわせられる
+ * （パレードの ゆっくり・ひかえめな よみあげ など、State.speechRate と sfxGainFactor()連動の
+ *   おと・よるモード けいさんは そのまま に、いちじてきに ちょうせいしたい ときに つかう）。
+ */
+function speak(text, opts){
   if (!("speechSynthesis" in window) || !text) return;
+  opts = opts || {};
   try{
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "ja-JP";
-    u.rate = State.speechRate;  // よみあげの はやさ（保護者せっていで 0.7〜1.2 に調整可。既定 0.88）
+    u.rate = State.speechRate * (opts.rateMul || 1);  // よみあげの はやさ（保護者せっていで 0.7〜1.2 に調整可。既定 0.88）
     u.pitch = 1.05;  // やさしいが 不自然に高すぎない
-    u.volume = isNightModeActive() ? 0.8 : 1.0;  // よるモード中は すこし ひかえめに
+    u.volume = (isNightModeActive() ? 0.8 : 1.0) * (opts.volMul || 1);  // よるモード中は すこし ひかえめに
     if (State.jaVoice) u.voice = State.jaVoice;
     speechSynthesis.speak(u);
   }catch(e){}
@@ -2174,20 +2306,31 @@ function show(id){
 
 function go(target){
   clearM4Timers();
+  stopParade(); // どの がめんへ うつる ときも、まえの ぱれーど えんしゅつを かならず とめる
   applyTimeBand(); // 画面遷移ごとに 時間帯クラスを さいけいさん（そらの えんしゅつ）
   switch(target){
-    case "home":   show("home"); greetHome(); break;
-    case "m1":     show("m1"); enterM1(); break;
-    case "m2":     show("m2"); enterM2(); break;
-    case "m3":     show("m3"); enterM3(); break;
-    case "m4":     show("m4"); enterM4(); break;
-    case "garage": show("garage"); renderGarage(); break;
-    default:       show(target);
+    case "home":    show("home"); greetHome(); break;
+    case "m1":      show("m1"); enterM1(); break;
+    case "m2":      show("m2"); enterM2(); break;
+    case "m3":      show("m3"); enterM3(); break;
+    case "m4":      show("m4"); enterM4(); break;
+    case "garage":  show("garage"); renderGarage(); break;
+    case "parade":  show("parade"); enterParade(); break;
+    case "oyasumi": show("oyasumi"); enterOyasumi(); break;
+    default:        show(target);
   }
 }
 
 /* ----------- ヘルパ：ランダム ----------- */
 function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+/** はいれつを その場で シャッフルして かえす（Fisher–Yates）。 */
+function shuffleArr(arr){
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 /* ----------- ヘルパ：CSSアニメーションの さいじっこう ----------- */
 function retriggerAnim(el, cls){
@@ -2481,6 +2624,78 @@ function renderGarage(){
     "あつめた のりもの " + State.garage.size + " / " + VEHICLES.length + " だい";
 }
 
+/* ============================== ⑤ のりものパレード（A-3・ながめる） ==============================
+   タップ操作 なし。ガレージに とうろく ずみの のりものが 1だいずつ ゆっくり よこぎる。
+   がめんを はなれたら go() から よばれる stopParade() で かならず とめる。 */
+
+/** ガレージが からの ときに つかう 代表の のりもの（バラエティが でるよう 6しゅるい）。 */
+const PARADE_DEFAULT_IDS = ["shoubou","patokaa","kyuukyuu","bus","densha","hikouki"];
+
+/** よこぎりを くりかえす ための タイマー（うごきを へらす せっていの ときだけ つかう）。 */
+let paradeTimer = null;
+
+function paradeVehicleQueue(){
+  // こわれた／しっこうした id は のぞく（vById に ない id で むげん さいき しないように）
+  const known = [...State.garage].filter(id => vById[id]);
+  const ids = known.length ? known : PARADE_DEFAULT_IDS.slice();
+  return shuffleArr(ids);
+}
+
+function enterParade(){
+  State.paradeActive = true;
+  State.paradeQueue = paradeVehicleQueue();
+  State.paradeIdx = 0;
+  const stage = document.getElementById("paradeStage");
+  if (stage){ stage.innerHTML = ""; stage.classList.toggle("reduced", prefersReducedMotion()); }
+  playParadeStep();
+}
+
+/** つぎの 1だいを ひょうじし、なまえを よみあげる。よこぎり終わり／タイマーで じぶんじしんを よぶ。 */
+function playParadeStep(){
+  if (!State.paradeActive) return;
+  const stage = document.getElementById("paradeStage");
+  if (!stage) return;
+  stage.innerHTML = ""; // まえの のりものを かたづける
+  if (State.paradeIdx >= State.paradeQueue.length){
+    State.paradeQueue = shuffleArr(State.paradeQueue); // ぜんぶ でたら じゅんばんを シャッフルして ループ
+    State.paradeIdx = 0;
+  }
+  const v = vById[State.paradeQueue[State.paradeIdx++]];
+  if (!v){ playParadeStep(); return; }
+  const el = document.createElement("div");
+  el.className = "paradeveh";
+  el.innerHTML = buildVehicleSVG(v);
+  stage.appendChild(el);
+  speak(v.name, { rateMul:0.85, volMul:0.6 }); // ゆっくり・ひかえめ（効果音は ならさない：クールダウン用途）
+  if (prefersReducedMotion()){
+    paradeTimer = setTimeout(playParadeStep, 4000); // まんなかに じゅんばん ひょうじ
+  } else {
+    const dur = 6 + Math.random() * 2; // 1だい あたり 6〜8びょう
+    el.style.animationDuration = dur + "s";
+    el.addEventListener("animationend", playParadeStep, { once:true });
+    requestAnimationFrame(() => el.classList.add("crossing"));
+  }
+}
+
+/** ぱれーど画面を はなれる ときの 後始末。タイマー・よみあげを かならず とめる。 */
+function stopParade(){
+  if (!State.paradeActive) return;
+  State.paradeActive = false;
+  clearTimeout(paradeTimer); paradeTimer = null;
+  // パレードの なまえ よみあげが つぎの がめんに もちこされない よう とめる
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  const stage = document.getElementById("paradeStage");
+  if (stage) stage.innerHTML = "";
+}
+
+/* ============================== おやすみ画面（C-1 タイマー到達） ============================== */
+function enterOyasumi(){
+  const v = pickRandom(VEHICLES);
+  const veh = document.getElementById("oyasumiVeh");
+  if (veh){ veh.innerHTML = buildVehicleSVG(v); retriggerAnim(veh, "go"); }
+  speak("きょうは おしまい！ いっぱい あそんだね。また あした あそぼうね。");
+}
+
 /* ============================== 保護者ゲート / せってい ============================== */
 let pressTimer = null;
 /**
@@ -2511,6 +2726,7 @@ function openParent(){
   document.getElementById("sfxVolLabel").textContent = State.sfxVol + "%";
   document.getElementById("speechRateRange").value = String(State.speechRate);
   document.getElementById("speechRateLabel").textContent = State.speechRate.toFixed(2);
+  document.getElementById("timerSelect").value = State.timer;
   show("parent");
 }
 
@@ -2634,6 +2850,16 @@ function bind(){
   // iOS の コンテキストメニュー（長押し）抑止
   gear.addEventListener("contextmenu", e => e.preventDefault());
 
+  // おやすみ画面（C-1）の はぐるま — こどもむけの かいじょボタンは おかず、おなじ 3びょう ながおしのみ
+  const oyaGear = document.getElementById("oyasumiGear");
+  oyaGear.addEventListener("pointerdown", startPress);
+  oyaGear.addEventListener("pointerup", cancelPress);
+  oyaGear.addEventListener("pointercancel", cancelPress);
+  oyaGear.addEventListener("mousedown", startPress);
+  oyaGear.addEventListener("mouseup", cancelPress);
+  oyaGear.addEventListener("mouseleave", cancelPress);
+  oyaGear.addEventListener("contextmenu", e => e.preventDefault());
+
   // せってい がめん
   document.getElementById("parentSave").addEventListener("click", () => {
     if (saveName(document.getElementById("nameInput2").value, false)){
@@ -2655,6 +2881,14 @@ function bind(){
     const n = parseInt(e.target.value, 10);
     State.nightStart = isNaN(n) ? 19 : n;
     try{ localStorage.setItem(STORE.nightStart, String(State.nightStart)); }catch(err){}
+  });
+
+  // おやすみタイマー（C-1）：「おやすみ なし」に もどすと、じどう いこうが とまる
+  document.getElementById("timerSelect").addEventListener("change", (e) => {
+    const v = e.target.value;
+    State.timer = (v === "10" || v === "20" || v === "30") ? v : "off";
+    try{ localStorage.setItem(STORE.timer, State.timer); }catch(err){}
+    State.timerWarned = false; // 10ぷん→30ぷん の えんちょう でも あらためて よこく できる よう、かえたら かならず リセット
   });
 
   // おとの おおきさ（C-4）：ドラッグ中は ひょうじだけ こうしん、はなしたら ほぞん＋プレビュー
@@ -2688,6 +2922,7 @@ function bind(){
 
 applyTimeBand(); // きどう時にも そらの えんしゅつを はんてい
 setInterval(applyTimeBand, 60000); // ひらきっぱなしでも 時間帯の さかいめで そらが かわる
+setInterval(checkBedtimeTimer, 5000); // おやすみタイマー（C-1）：のこり2ふん よこく・じかん到達を かんし
 bind();
 </script>
 </body>
