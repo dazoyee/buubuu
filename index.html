@@ -25,6 +25,7 @@
     --red:#ef4136;
     --blue:#29a3ff;
     --green:#41c36a;
+    --purple:#8e5fe0;
     --cream:#fff7e6;
     --ink:#2b2b2b;
     --safe-top: env(safe-area-inset-top, 0px);
@@ -55,7 +56,9 @@
     flex-direction:column;
     padding:calc(var(--safe-top) + 8px) 14px calc(var(--safe-bottom) + 14px);
   }
-  .screen.active{ display:flex; }
+  .screen.active{ display:flex; animation:screenIn .22s ease-out; }
+  @keyframes screenIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .screen.active{ animation:none; } }
   .center{ align-items:center; justify-content:center; text-align:center; }
 
   /* マスコット */
@@ -120,6 +123,7 @@
   .modebtn.m1{ background:var(--red); }
   .modebtn.m2{ background:var(--blue); }
   .modebtn.m3{ background:var(--green); }
+  .modebtn.m4{ background:var(--purple); }
   .garagebtn{ background:var(--orange); font-size:23px; padding:18px; }
 
   /* モード共通ヘッダ */
@@ -150,6 +154,22 @@
   .nameplate{ font-size:30px; font-weight:900; color:var(--ink); min-height:38px; }
   .hint{ font-size:16px; color:#7a7a7a; font-weight:700; }
   .nextbtn{ background:var(--amber); font-size:24px; padding:20px; width:100%; max-width:360px; margin-top:6px; }
+
+  /* ④ どっちかな？ クイズ */
+  .quizrow{ display:flex; gap:16px; width:100%; max-width:520px; justify-content:center; }
+  .quizcard{ width:min(36vw,30vh,190px); height:min(36vw,30vh,190px); border-color:var(--purple); }
+
+  /* ごほうび：かみふぶき */
+  #confettiLayer{ position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden; }
+  .confetti-piece{
+    position:absolute; top:-20px; opacity:.95; border-radius:2px;
+    animation-name:confettiFall; animation-timing-function:ease-in; animation-fill-mode:forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(110vh) rotate(var(--rot,360deg)); opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce){ .confetti-piece{ display:none; } }
 
   /* お話 */
   #m3 .picker{ display:flex; gap:14px; width:100%; max-width:420px; }
@@ -297,6 +317,7 @@
     <button class="bigbtn modebtn m1" data-go="m1"><span class="ico">🔎</span>これ なあに？</button>
     <button class="bigbtn modebtn m2" data-go="m2"><span class="ico">🔊</span>おと・まね あそび</button>
     <button class="bigbtn modebtn m3" data-go="m3"><span class="ico">📖</span>みじかい おはなし</button>
+    <button class="bigbtn modebtn m4" data-go="m4"><span class="ico">🎯</span>どっちかな？</button>
     <button class="bigbtn garagebtn" data-go="garage"><span class="ico">🏠</span>ガレージ（ずかん）</button>
   </div>
 </section>
@@ -359,6 +380,24 @@
   </div>
 </section>
 
+<!-- ========== ④ どっちかな？ クイズ ========== -->
+<section id="m4" class="screen">
+  <div class="modehead">
+    <button class="backbtn" data-go="home">◀ もどる</button>
+    <div class="modetitle">どっちかな？</div>
+    <div style="width:78px"></div>
+  </div>
+  <div class="stage">
+    <div class="speech" id="m4Question">どっちかな？</div>
+    <div class="quizrow">
+      <div class="card quizcard" id="m4CardL"></div>
+      <div class="card quizcard" id="m4CardR"></div>
+    </div>
+    <div class="hint" id="m4Hint">タッチして こたえてね</div>
+  </div>
+  <button class="bigbtn nextbtn" id="m4Replay" style="background:var(--purple);"><span class="ico">🔊</span>もういちど</button>
+</section>
+
 <!-- ========== ガレージ ========== -->
 <section id="garage" class="screen">
   <div class="modehead">
@@ -400,6 +439,7 @@
 </section>
 
 <div class="stripes" style="position:fixed;left:0;right:0;bottom:0;z-index:-1;"></div>
+<div id="confettiLayer" aria-hidden="true"></div>
 
 <script>
 "use strict";
@@ -409,7 +449,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.4.1";
+const APP_VERSION = "v0.5.0";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -1614,22 +1654,36 @@ const STORIES = [
 
 /* ============================== じょうたい ============================== */
 const STORE = {
-  name:    "buubuu.name",
-  garage:  "buubuu.garage",
-  read:    "buubuu.readStories"
+  name:     "buubuu.name",
+  garage:   "buubuu.garage",
+  read:     "buubuu.readStories",
+  complete: "buubuu.complete"
 };
 
 const State = {
   name: localStorage.getItem(STORE.name) || "",
   garage: loadSet(STORE.garage),
   read: loadSet(STORE.read),
+  complete: localStorage.getItem(STORE.complete) === "1",
   audioReady: false,
   jaVoice: null,
   m1: null,   // げんざいの のりもの(これなあに)
   m2: null,   // げんざいの のりもの(おとまね)
   storyLen: "short",
-  story: null
+  story: null,
+  m4Target: null,  // げんざいの もんだい(どっちかな？) の せいかい のりもの
+  m4Type: "name",  // "name"（なまえ出題）または "sound"（おと出題）
+  m4LeftId: null,  // ひだりの カードの のりもの id
+  m4RightId: null, // みぎの カードの のりもの id
+  m4Solved: false
 };
+
+// のりものが すでに ぜんぶ そろっている ばあい、コンプリートフラグを ついしょうごうさせる
+// （このばあい あらたな addToGarage は おきないため、いわいの えんしゅつは でない）。
+if (!State.complete && State.garage.size >= VEHICLES.length){
+  State.complete = true;
+  try{ localStorage.setItem(STORE.complete, "1"); }catch(e){}
+}
 
 function loadSet(key){
   try{ return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
@@ -1950,6 +2004,33 @@ function playSound(soundType){
       });
       break;
     }
+    case "fanfare": { // せいかい（どっちかな？）：あかるい 4おん ファンファーレ（ド・ミ・ソ・高いド）
+      const o = out(0.20);
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      const seg = 0.11;
+      notes.forEach((f,i) => {
+        const t = now + i*seg;
+        const osc = ctx.createOscillator(); osc.type = "square"; osc.frequency.value = f;
+        const h = ctx.createOscillator(); h.type = "triangle"; h.frequency.value = f*2;
+        const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(1,t+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t+seg*2.2);
+        const hg = ctx.createGain(); hg.gain.value = 0.2; h.connect(hg); hg.connect(g);
+        osc.connect(g); g.connect(o);
+        osc.start(t); h.start(t); osc.stop(t+seg*2.3); h.stop(t+seg*2.3);
+      });
+      break;
+    }
+    case "sparkle": { // ガレージ しんき かいほう：きらきら した たかい ベルの つぶ
+      const o = out(0.16);
+      const total = 6;
+      for (let i=0;i<total;i++){
+        const t = now + i*0.045;
+        const f = 1600 + Math.random()*1600;
+        const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.value = f;
+        const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.35,t+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t+0.28);
+        osc.connect(g); g.connect(o); osc.start(t); osc.stop(t+0.3);
+      }
+      break;
+    }
   }
 }
 
@@ -1961,11 +2042,13 @@ function show(id){
 }
 
 function go(target){
+  clearM4Timers();
   switch(target){
     case "home":   show("home"); greetHome(); break;
     case "m1":     show("m1"); enterM1(); break;
     case "m2":     show("m2"); enterM2(); break;
     case "m3":     show("m3"); enterM3(); break;
+    case "m4":     show("m4"); enterM4(); break;
     case "garage": show("garage"); renderGarage(); break;
     default:       show(target);
   }
@@ -1979,12 +2062,52 @@ function retriggerAnim(el, cls){
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
 }
 
-/* ----------- ガレージ 追加 ----------- */
-function addToGarage(id){
-  if (!State.garage.has(id)){
-    State.garage.add(id);
-    saveSet(STORE.garage, State.garage);
+/* ----------- ごほうび：かみふぶき ----------- */
+function prefersReducedMotion(){
+  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/** かみふぶき えんしゅつ。opts.count で つぶの りょうを かえられる（どこからでも よべる）。 */
+function celebrate(opts){
+  opts = opts || {};
+  const count = opts.count || 24;
+  if (prefersReducedMotion()) return;
+  const layer = document.getElementById("confettiLayer");
+  if (!layer) return;
+  const colors = ["#ef4136","#29a3ff","#41c36a","#ffce00","#ff8f00","#8e5fe0"];
+  for (let i=0;i<count;i++){
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    const size = 6 + Math.random()*8;
+    p.style.left = (Math.random()*100) + "vw";
+    p.style.width = size + "px";
+    p.style.height = (size*0.4) + "px";
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (1.6 + Math.random()*1.2) + "s";
+    p.style.animationDelay = (Math.random()*0.25) + "s";
+    p.style.setProperty("--rot", (Math.random()*720-360) + "deg");
+    layer.appendChild(p);
+    setTimeout(() => p.remove(), 3600);
   }
+}
+
+/* ----------- ガレージ 追加 ----------- */
+/** ガレージに とうろく。しんき とうろく なら true。とうろく じたいは サイレント
+    （えんしゅつは よびだしがわ の せきにん。コンプリートの おいわい だけは ここで）。 */
+function addToGarage(id){
+  if (State.garage.has(id)) return false;
+  State.garage.add(id);
+  saveSet(STORE.garage, State.garage);
+  if (!State.complete && State.garage.size >= VEHICLES.length){
+    State.complete = true;
+    try{ localStorage.setItem(STORE.complete, "1"); }catch(e){}
+    // ぜんぶ コンプリート：いちどだけの おおきな おいわい
+    setTimeout(() => {
+      speak("ぜんぶ あつまったね！ すごいね！");
+      celebrate({ count: 90 });
+    }, 500);
+  }
+  return true;
 }
 
 /* ============================== ホーム ============================== */
@@ -2044,6 +2167,87 @@ function tapM2(){
   playSound(v.sound);
   // 効果音の あとに オノマトペを よみあげ
   setTimeout(() => speak(v.onoma), 900);
+}
+
+/* ============================== ④ どっちかな？ クイズ ============================== */
+/** せいかい したときの ほめことば（すべて ひらがな中心・みじかく・まえむき）。 */
+const M4_PRAISE = [
+  "せいかい！ すごいね！",
+  "やったね！ せいかい！",
+  "ぴんぽーん！ すごいね！",
+  "そのとおり！ かしこいね！"
+];
+
+/* じどうで つぎの もんだいへ すすむ タイマー／おと出題の よみあげ タイマー。
+   がめんを はなれたら かならず クリアする（ふるい タイマーが あたらしい もんだいを うわがき しないように）。 */
+let m4NextTimer = null;
+let m4PromptTimer = null;
+function clearM4Timers(){
+  clearTimeout(m4NextTimer);  m4NextTimer = null;
+  clearTimeout(m4PromptTimer); m4PromptTimer = null;
+}
+
+/** ターゲットと なまえの かしらもじ・emoji が ちがう のりものを ダミーに えらぶ。 */
+function pickM4Dummy(target){
+  let candidates = VEHICLES.filter(v =>
+    v.id !== target.id && v.name[0] !== target.name[0] && v.emoji !== target.emoji);
+  if (!candidates.length) candidates = VEHICLES.filter(v => v.id !== target.id);
+  return pickRandom(candidates);
+}
+
+function enterM4(){
+  clearM4Timers();
+  // なまえ出題／おと出題を こんざい。おと出題は M2_POOL（とくちょうてきな おとの代表車）のみ。
+  const useSound = Math.random() < 0.5;
+  const pool = useSound ? (M2_POOL.length ? M2_POOL : VEHICLES) : VEHICLES;
+  let target = pickRandom(pool);
+  if (State.m4Target && pool.length > 1){
+    while (target.id === State.m4Target.id) target = pickRandom(pool);
+  }
+  const dummy = pickM4Dummy(target);
+  State.m4Target = target;
+  State.m4Type = useSound ? "sound" : "name";
+  State.m4Solved = false;
+  const swap = Math.random() < 0.5;
+  State.m4LeftId = (swap ? dummy : target).id;
+  State.m4RightId = (swap ? target : dummy).id;
+  document.getElementById("m4CardL").innerHTML = buildVehicleSVG(swap ? dummy : target);
+  document.getElementById("m4CardR").innerHTML = buildVehicleSVG(swap ? target : dummy);
+  document.getElementById("m4Hint").textContent = "タッチして こたえてね";
+  playM4Prompt();
+}
+
+/** いま の もんだいを ならす／よみあげる（「もういちど」ボタンからも よばれる）。 */
+function playM4Prompt(){
+  const v = State.m4Target; if (!v) return;
+  if (State.m4Type === "sound"){
+    document.getElementById("m4Question").textContent = "この おとは どっち？";
+    playSound(v.sound);
+    m4PromptTimer = setTimeout(() => speak("この おとは どっち？"), 800);
+  } else {
+    const q = v.name + "は どっち？";
+    document.getElementById("m4Question").textContent = q;
+    speak(q);
+  }
+}
+
+function tapM4(side){
+  const v = State.m4Target; if (!v || State.m4Solved) return;
+  const correctSide = (State.m4LeftId === v.id) ? "L" : "R";
+  if (side === correctSide){
+    State.m4Solved = true;
+    retriggerAnim(document.getElementById("m4Card" + correctSide), "pop");
+    playSound("fanfare");
+    celebrate({ count: 30 });
+    speak(pickRandom(M4_PRAISE));
+    // しんき かいほう なら、ファンファーレの あとに きらきら音を かさねる
+    if (addToGarage(v.id)) setTimeout(() => playSound("sparkle"), 700);
+    m4NextTimer = setTimeout(enterM4, 1800);
+  } else {
+    // ふせいかい：ばつ演出・罰音はださず、正解カードを やさしく あんない
+    retriggerAnim(document.getElementById("m4Card" + correctSide), "pop");
+    speak("こっちだよ！");
+  }
 }
 
 /* ============================== ③ みじかいお話 ============================== */
@@ -2248,6 +2452,11 @@ function bind(){
   // ② 音・まね
   document.getElementById("m2Card").addEventListener("click", tapM2);
   document.getElementById("m2Next").addEventListener("click", enterM2);
+
+  // ④ どっちかな？
+  document.getElementById("m4CardL").addEventListener("click", () => tapM4("L"));
+  document.getElementById("m4CardR").addEventListener("click", () => tapM4("R"));
+  document.getElementById("m4Replay").addEventListener("click", playM4Prompt);
 
   // ③ おはなし
   document.querySelectorAll(".pickbtn").forEach(b => {
