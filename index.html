@@ -148,14 +148,17 @@
     width:54px; height:54px; border-radius:16px; border:none; background:rgba(0,0,0,.06);
     font-size:24px; cursor:pointer; flex:0 0 auto;
   }
-  .menu{ display:flex; flex-direction:column; gap:14px; width:100%; max-width:440px; margin:auto 0; }
-  .modebtn{ font-size:26px; padding:24px 18px; }
+  /* ボタンが 7つに ふえたため 2れつの グリッドに して 1がめんに おさめる */
+  .menu{ display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:460px; margin:auto 0; }
+  .modebtn{ font-size:16px; padding:18px 8px; flex-direction:column; gap:6px; text-align:center; line-height:1.3; }
+  .modebtn .ico{ font-size:1.9em; }
   .modebtn.m1{ background:var(--red); }
   .modebtn.m2{ background:var(--blue); }
   .modebtn.m3{ background:var(--green); }
   .modebtn.m4{ background:var(--purple); }
   .modebtn.m5{ background:#00acc1; }
-  .garagebtn{ background:var(--orange); font-size:23px; padding:18px; }
+  .modebtn.m6{ background:#5c6bc0; }
+  .garagebtn{ grid-column:1 / -1; background:var(--orange); font-size:22px; padding:16px; }
 
   /* モード共通ヘッダ */
   .modehead{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -294,6 +297,9 @@
   @keyframes wavev{ 0%{ transform:translateX(0); } 100%{ transform:translateX(-26px); } }
   .svgveh .snow{ animation:snowv 2.4s linear infinite; }
   @keyframes snowv{ 0%{ transform:translateY(-14px); opacity:0; } 15%{ opacity:.95; } 100%{ transform:translateY(30px); opacity:0; } }
+  /* ===== はしごしゃ（B-2）：はしごが のびちぢみする ===== */
+  .svgveh .ladder{ transform-box:fill-box; transform-origin:left center; animation:ladderExtend 2.4s ease-in-out infinite; }
+  @keyframes ladderExtend{ 0%,100%{ transform:scaleX(.55); } 50%{ transform:scaleX(1); } }
   @media (prefers-reduced-motion: reduce){ .svgveh *{ animation:none !important; } }
   .cell.locked .svgveh *{ animation:none !important; }
 
@@ -358,11 +364,36 @@
   .oyazzz{ font-size:30px; margin-top:10px; opacity:.85; animation:bob 2.2s ease-in-out infinite; position:relative; z-index:1; }
   @media (prefers-reduced-motion: reduce){ #oyasumi::before{ animation:none; } .oyaveh.go{ animation:none; transform:none; opacity:1; left:38%; } }
 
+  /* ===== どらいぶ ごっこ（A-2・ゆびで うごかす）===== */
+  .drivestage{
+    flex:1; position:relative; overflow:hidden; margin-top:10px;
+    border-radius:28px; border:5px solid var(--amber); box-shadow:0 8px 0 rgba(0,0,0,.08);
+    touch-action:none;
+    background:linear-gradient(180deg,#bfe4ff 0%,#eaf6ff 55%,#8bc34a 55% 62%,#546e7a 62% 100%);
+  }
+  .drivestage.scene-sea{ background:linear-gradient(180deg,#bfe4ff 0%,#eaf6ff 45%,#4fa8e0 45% 100%); }
+  .drivestage.scene-sky{ background:linear-gradient(180deg,#8ed0ff 0%,#eaf6ff 60%,#dbe9f5 100%); }
+  .driveveh{
+    position:absolute; left:0; top:0; width:150px; touch-action:none;
+    transform:translate(-50%,-50%); will-change:left, top;
+  }
+  .driveveh svg.svgveh{ width:150px; height:112px; display:block; }
+  .drivepicker{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .drivepickbtn{
+    width:56px; height:56px; border-radius:16px; border:3px solid var(--amber); background:#fff;
+    display:flex; align-items:center; justify-content:center; padding:5px;
+    box-shadow:0 4px 0 rgba(0,0,0,.12); cursor:pointer;
+  }
+  .drivepickbtn svg.svgveh{ width:100%; height:100%; }
+  .drivepickbtn.active{ border-color:var(--red); background:#fff3e0; }
+
   /* ===== よこむき（landscape）レイアウト ===== */
   @media (orientation: landscape) and (max-height: 500px){
-    .menu{ display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:640px; }
-    .modebtn{ font-size:20px; padding:14px 10px; }
+    .menu{ grid-template-columns:1fr 1fr; gap:10px; max-width:640px; }
+    .modebtn{ font-size:15px; padding:10px 8px; flex-direction:row; gap:8px; }
+    .modebtn .ico{ font-size:1.4em; }
     .garagebtn{ font-size:19px; padding:14px 10px; }
+    .driveveh{ width:104px; } .driveveh svg.svgveh{ width:104px; height:78px; }
     .topbar .mascot svg.svgveh{ width:56px; height:42px; }
     .speech{ font-size:16px; padding:6px 12px; }
     .card{ width:min(46vh,330px); height:min(46vh,330px); border-radius:24px; }
@@ -416,6 +447,7 @@
     <button class="bigbtn modebtn m3" data-go="m3"><span class="ico">📖</span>みじかい おはなし</button>
     <button class="bigbtn modebtn m4" data-go="m4"><span class="ico">🎯</span>どっちかな？</button>
     <button class="bigbtn modebtn m5" data-go="parade"><span class="ico">🎪</span>ぱれーど</button>
+    <button class="bigbtn modebtn m6" data-go="drive"><span class="ico">🚗</span>どらいぶ</button>
     <button class="bigbtn garagebtn" data-go="garage"><span class="ico">🏠</span>ガレージ（ずかん）</button>
   </div>
 </section>
@@ -517,6 +549,19 @@
   <div class="paradestage" id="paradeStage"></div>
 </section>
 
+<!-- ========== ⑥ どらいぶ ごっこ（ゆびで うごかす） ========== -->
+<section id="drive" class="screen">
+  <div class="modehead">
+    <button class="backbtn" data-go="home">◀ もどる</button>
+    <div class="modetitle">どらいぶ ごっこ</div>
+    <div style="width:78px"></div>
+  </div>
+  <div class="drivestage scene-road" id="driveStage">
+    <div class="driveveh" id="driveVeh"></div>
+  </div>
+  <div class="drivepicker" id="drivePicker"></div>
+</section>
+
 <!-- ========== 保護者ゲート（設定） ========== -->
 <section id="parent" class="screen center scrollsafe">
   <div class="panel">
@@ -602,7 +647,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.7.0";
+const APP_VERSION = "v0.8.0";
 
 /** アプリを ひらいた じこく（おやすみタイマー C-1 の きじゅん。セッション内のみで つかう）。 */
 const SESSION_START = Date.now();
@@ -664,7 +709,13 @@ const VEHICLES = [
   { id:"waterbus", name:"すいじょうバス", emoji:"⛴️", onoma:"ぼぼー！", sound:"shiphorn", word:"うみを はしる すいじょうバス。みずの うえの ばすだね。" },
   { id:"tanker", name:"タンカー", emoji:"🚢", onoma:"ぼおー！", sound:"shiphorn", word:"あぶらを はこぶ おおきな タンカー。うみを すすむよ。" },
   { id:"cruise", name:"おおがたきゃくせん", emoji:"🚢", onoma:"ぼおー！", sound:"shiphorn", word:"おおきな きゃくせん。たくさんの ひとが のれるよ。" },
-  { id:"motorboat", name:"モーターボート", emoji:"🚤", onoma:"ぶるるん！", sound:"engine", word:"はやい モーターボート。なみを けって すすむよ。" }
+  { id:"motorboat", name:"モーターボート", emoji:"🚤", onoma:"ぶるるん！", sound:"engine", word:"はやい モーターボート。なみを けって すすむよ。" },
+  { id:"hashigo", name:"はしごしゃ", emoji:"🚒", onoma:"うぃーん のびるよ！", sound:"firebell", word:"たかい ところまで とどく はしごしゃ。はしごが ぐーんと のびるよ。" },
+  { id:"cablecar", name:"ケーブルカー", emoji:"🚠", onoma:"すーっ のぼるよ！", sound:"motor", word:"やまを のぼる ケーブルカー。ワイヤーで ぐんぐん すすむよ。" },
+  { id:"ferry", name:"フェリー", emoji:"⛴️", onoma:"ぼぼ ぼー！", sound:"shiphorn", word:"くるまも のせる おおきな フェリー。うみを のんびり わたるよ。" },
+  { id:"rescueheli", name:"きゅうじょヘリ", emoji:"🚁", onoma:"ばたばた たすけるよ！", sound:"rotor", word:"こまった ひとを たすける きゅうじょヘリ。ロープで きゅうしゅつ するよ。" },
+  { id:"gokart", name:"ゴーカート", emoji:"🏎️", onoma:"ぶるるん しゅっ！", sound:"race", word:"ちいさくて はやい ゴーカート。ぐるぐる コースを はしるよ。" },
+  { id:"hovercraft", name:"ホバークラフト", emoji:"🚤", onoma:"しゅーん すべるよ！", sound:"jet", word:"みずの うえを すべる ホバークラフト。かぜを おこして すすむよ。" }
 ];
 
 const vById = Object.fromEntries(VEHICLES.map(v => [v.id, v]));
@@ -725,7 +776,13 @@ const VEHICLE_ART = {
   waterbus: { shape:"waterbus", c:"#29a3ff" },
   tanker: { shape:"tanker", c:"#37474f" },
   cruise: { shape:"cruise", c:"#f4f7f9" },
-  motorboat: { shape:"motorboat", c:"#e5443b" }
+  motorboat: { shape:"motorboat", c:"#e5443b" },
+  hashigo: { shape:"ladder", c:"#ef4136" },
+  cablecar: { shape:"cablecar", c:"#d1495b" },
+  ferry: { shape:"ferry", c:"#1f7ae0" },
+  rescueheli: { shape:"rescueheli", c:"#f4f6f8" },
+  gokart: { shape:"gokart", c:"#ffce00" },
+  hovercraft: { shape:"hovercraft", c:"#00acc1" }
 };
 
 const SHADOW = '<ellipse cx="120" cy="169" rx="86" ry="9" fill="rgba(0,0,0,0.10)"/>';
@@ -1184,6 +1241,79 @@ function vehicleBody(id){
     case "tanker": return '<g class="veh">' + '<path d="M16 108 L214 108 L196 144 L40 144 Z" fill="'+c+'"/>' + '<rect x="16" y="100" width="198" height="9" fill="#e5443b"/>' + '<rect x="150" y="70" width="50" height="34" rx="4" fill="#eceff1"/>' + win(158,78,12,12) + win(178,78,12,12) + '<rect x="40" y="86" width="92" height="16" rx="3" fill="#90a4ae"/>' + '<circle cx="60" cy="94" r="5" fill="#607d8b"/>' + '<circle cx="90" cy="94" r="5" fill="#607d8b"/>' + '<circle cx="120" cy="94" r="5" fill="#607d8b"/>' + '</g>' + '<g class="wave"><path d="M-20 150 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
     case "cruise": return '<g class="veh">' + '<path d="M16 116 L214 116 L196 148 L42 148 Z" fill="'+c+'"/>' + '<rect x="16" y="108" width="198" height="9" fill="#1f7ae0"/>' + '<rect x="40" y="80" width="150" height="30" rx="4" fill="#f4f7f9"/>' + '<rect x="56" y="58" width="120" height="22" rx="4" fill="#f4f7f9"/>' + win(50,88,16,14) + win(74,88,16,14) + win(98,88,16,14) + win(122,88,16,14) + win(146,88,16,14) + '<rect x="118" y="42" width="16" height="20" rx="3" fill="#1f3f8f"/>' + '<rect x="148" y="42" width="16" height="20" rx="3" fill="#1f3f8f"/>' + '</g>' + '<g class="wave"><path d="M-20 152 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
     case "motorboat": return '<g class="veh">' + '<path d="M30 110 L182 104 Q212 104 216 116 L196 134 L48 138 Z" fill="'+c+'"/>' + '<path d="M74 104 L120 86 L150 86 L150 104 Z" fill="#bfe6ff"/>' + '<rect x="60" y="106" width="92" height="7" fill="#ffffff" opacity="0.5"/>' + '</g>' + '<g class="wave"><path d="M-20 150 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>';
+    case "ladder": { const g='g_'+id;
+      return paint(g,c) + '<g class="veh">'
+      + '<rect x="20" y="124" width="196" height="20" rx="8" fill="#39414a"/>'
+      + '<rect x="22" y="90" width="110" height="42" rx="10" fill="url(#'+g+')"/>'
+      + winP(30,98,40,24)
+      + '<rect x="22" y="92" width="110" height="6" rx="3" fill="#ffffff" opacity="0.22"/>'
+      + '<rect x="132" y="104" width="86" height="28" rx="6" fill="url(#'+g+')"/>'
+      + '<rect class="beacon" x="150" y="92" width="22" height="10" rx="3" fill="#ff5b5b"/>'
+      + '<g class="ladder">'
+      + '<line x1="150" y1="102" x2="222" y2="18" stroke="#b0bec5" stroke-width="5" stroke-linecap="round"/>'
+      + '<line x1="150" y1="114" x2="222" y2="30" stroke="#b0bec5" stroke-width="5" stroke-linecap="round"/>'
+      + '<line x1="168" y1="94" x2="176" y2="106" stroke="#b0bec5" stroke-width="3"/>'
+      + '<line x1="186" y1="70" x2="194" y2="82" stroke="#b0bec5" stroke-width="3"/>'
+      + '<line x1="204" y1="46" x2="212" y2="58" stroke="#b0bec5" stroke-width="3"/>'
+      + '</g>'
+      + wheelP(66,150) + wheelP(176,150) + '</g>'; }
+    case "cablecar": { const g='g_'+id;
+      return '<line x1="6" y1="164" x2="232" y2="24" stroke="#8d6e63" stroke-width="6" stroke-linecap="round"/>'
+      + '<line x1="6" y1="164" x2="232" y2="24" stroke="#a1887f" stroke-width="2" stroke-dasharray="10 8"/>'
+      + paint(g,c) + '<g transform="rotate(-30 120 110)"><g class="veh">'
+      + '<rect x="72" y="88" width="96" height="54" rx="10" fill="url(#'+g+')"/>'
+      + '<rect x="72" y="90" width="96" height="6" rx="3" fill="#ffffff" opacity="0.25"/>'
+      + winP(82,98,32,26) + winP(120,98,32,26)
+      + '<rect x="72" y="132" width="96" height="10" fill="'+shade(c,-0.2)+'"/>'
+      + '<circle cx="90" cy="146" r="6" fill="#37474f"/><circle cx="150" cy="146" r="6" fill="#37474f"/>'
+      + '</g></g>'; }
+    case "ferry": { const g='g_'+id;
+      return paint(g,c) + '<g class="veh">'
+      + '<path d="M14 118 L226 118 L200 148 L40 148 Z" fill="url(#'+g+')"/>'
+      + '<rect x="14" y="110" width="212" height="10" rx="4" fill="'+shade(c,-0.18)+'"/>'
+      + '<rect x="60" y="120" width="36" height="14" rx="3" fill="#e5443b"/>'
+      + '<rect x="110" y="120" width="36" height="14" rx="3" fill="#ffce00"/>'
+      + '<rect x="160" y="120" width="36" height="14" rx="3" fill="#3fbf6f"/>'
+      + '<rect x="86" y="76" width="70" height="34" rx="6" fill="#eef2f6"/>'
+      + winP(94,84,20,16) + winP(122,84,20,16)
+      + '<rect x="150" y="56" width="10" height="22" rx="3" fill="#455a64"/>'
+      + '<circle cx="60" cy="140" r="4" fill="#ffffff"/><circle cx="90" cy="140" r="4" fill="#ffffff"/>'
+      + '</g>'
+      + '<g class="wave"><path d="M-20 152 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7ec8ff" stroke-width="6" stroke-linecap="round"/></g>'; }
+    case "rescueheli": { const g='g_'+id;
+      return paint(g,c) + '<g class="fly">'
+      + '<path d="M150 98 L214 95 q6 0 6 6 l0 4 q0 6 -6 6 l-64 5 z" fill="'+shade(c,-0.12)+'"/>'
+      + '<ellipse cx="100" cy="106" rx="62" ry="34" fill="url(#'+g+')"/>'
+      + '<path d="M40 108 a62 34 0 0 0 120 0 z" fill="#000000" opacity="0.08"/>'
+      + winP(60,92,58,28)
+      + '<rect x="92" y="96" width="10" height="18" fill="#ef4136"/><rect x="85" y="103" width="24" height="6" fill="#ef4136"/>'
+      + '<path d="M206 82 l14 -3 q3 0 3 5 l-1 24 l-13 -4 z" fill="url(#'+g+')"/>'
+      + '<g class="trotor"><ellipse cx="218" cy="92" rx="3" ry="16" fill="#5a6b78"/></g>'
+      + '<rect x="72" y="136" width="72" height="5" rx="2.5" fill="#5a6b78"/>'
+      + '<line x1="88" y1="124" x2="84" y2="137" stroke="#5a6b78" stroke-width="4"/><line x1="124" y1="124" x2="128" y2="137" stroke="#5a6b78" stroke-width="4"/>'
+      + '<rect x="95" y="62" width="11" height="16" rx="3" fill="#5a6b78"/>'
+      + '<g class="rotor"><ellipse cx="100" cy="60" rx="82" ry="6" fill="#566876"/><circle cx="100" cy="60" r="6" fill="#39414a"/></g>'
+      + '<g class="hook"><line x1="100" y1="140" x2="100" y2="164" stroke="#8d6e63" stroke-width="2"/><rect x="90" y="164" width="20" height="12" rx="3" fill="#ffb300"/></g>'
+      + '</g>'; }
+    case "gokart": { const g='g_'+id;
+      return paint(g,c) + '<g class="veh">'
+      + '<rect x="40" y="128" width="140" height="16" rx="6" fill="url(#'+g+')"/>'
+      + '<rect x="40" y="130" width="140" height="4" rx="2" fill="#ffffff" opacity="0.3"/>'
+      + '<path d="M70 128 Q86 104 116 104 L134 104 Q150 104 150 118 L150 128 Z" fill="url(#'+g+')"/>'
+      + '<line x1="96" y1="104" x2="96" y2="84" stroke="#37474f" stroke-width="5"/><line x1="124" y1="104" x2="124" y2="84" stroke="#37474f" stroke-width="5"/><line x1="92" y1="84" x2="128" y2="84" stroke="#37474f" stroke-width="5"/>'
+      + '<circle cx="112" cy="116" r="9" fill="#2b2b2b"/>'
+      + '<rect x="30" y="120" width="14" height="10" rx="2" fill="'+shade(c,-0.2)+'"/>'
+      + wheelP(56,146,20) + wheelP(168,146,24) + '</g>'; }
+    case "hovercraft": { const g='g_'+id;
+      return paint(g,c) + '<g class="veh">'
+      + '<path d="M40 118 Q30 138 40 146 L200 146 Q210 138 200 118 Z" fill="#eceff1"/>'
+      + '<rect x="50" y="80" width="140" height="42" rx="14" fill="url(#'+g+')"/>'
+      + winP(60,88,30,24) + winP(96,88,30,24) + winP(132,88,30,24)
+      + '<rect x="50" y="82" width="140" height="6" rx="3" fill="#ffffff" opacity="0.22"/>'
+      + '<rect x="176" y="70" width="34" height="46" rx="6" fill="'+shade(c,-0.1)+'"/>'
+      + '<g class="rotor"><ellipse cx="193" cy="92" rx="14" ry="20" fill="#5a6b78"/><line x1="193" y1="72" x2="193" y2="112" stroke="#2b2b2b" stroke-width="3"/><line x1="179" y1="92" x2="207" y2="92" stroke="#2b2b2b" stroke-width="3"/></g>'
+      + '</g>'
+      + '<g class="wave" style="opacity:.7"><path d="M20 150 q20 -6 40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#b0bec5" stroke-width="5" stroke-linecap="round"/></g>'; }
     default: return '<g class="veh"><rect x="40" y="96" width="150" height="46" rx="10" fill="'+c+'"/>' + wheel(72,150) + wheel(160,150) + '</g>';
   }
 }
@@ -1803,6 +1933,134 @@ const STORIES = [
       "とても はやくて びっくりだね。",
       "おべんとうを たべながら たびを たのしむ。",
       "「はやぶさ だいすき」と {name}は にっこり。"
+    ] },
+
+  { id:39, v:"bus", short:[
+      "はるの あたたかい ひ、{name}は ばすで えんそくへ。",
+      "ぶっ ぶー、さくらの みちを はしるよ。",
+      "まどの そとは はなびら ひらひら。",
+      "「きれいだね」と {name}が わらったよ。"
+    ], long:[
+      "はるが きて、きょうは ばすで えんそく。",
+      "{name}は おともだちと ばすに のったよ。",
+      "ぶっ ぶー、さくらなみきの みちを はしる。",
+      "まどの そとは はなびらが ひらひら まうよ。",
+      "こうえんに ついたら おべんとうの じかん。",
+      "ちょうちょも とんできて にこにこ。",
+      "かえりの ばすでも さくらが きれいだったね。",
+      "「たのしい えんそくだったね」と {name}は にっこり。"
+    ] },
+
+  { id:40, v:"sweeper", short:[
+      "おはなみの あさ、ろめんせいそうしゃが やってきた。",
+      "{name}と いっしょに みちを ぴかぴかに するよ。",
+      "しゃー、はなびらを そっと あつめるよ。",
+      "きれいな みちが できあがったね。"
+    ], long:[
+      "さくらの はなびらが みちに いっぱい おちた あさ。",
+      "「おはなみの まえに きれいに しようね」と せいそうしゃ。",
+      "{name}も いっしょに おてつだい するよ。",
+      "しゃー しゃー、はなびらを そっと あつめる。",
+      "みちが きらきら ぴかぴかに なったね。",
+      "みんなが おはなみに あつまってきたよ。",
+      "「ありがとう」と こうえんの みんなが いった。",
+      "{name}も せいそうしゃも うれしくて にっこり。"
+    ] },
+
+  { id:41, v:"motorboat", short:[
+      "なつの うみで {name}は モーターボートに のったよ。",
+      "ぶるるん、なみを けって すすむよ。",
+      "しぶきが きらきら とんでくるね。",
+      "「たのしいね」と {name}が わらったよ。"
+    ], long:[
+      "あつい なつの ひ、うみへ あそびに いったよ。",
+      "{name}は モーターボートに のりこんだ。",
+      "ぶるるん、げんきよく はしりだすよ。",
+      "なみを ざぶんと けって すすんでいく。",
+      "しぶきが きらきら ひかって とんでくるね。",
+      "とおくに しろい くもと あおい うみ。",
+      "かもめも いっしょに とんでくれたよ。",
+      "「なつの うみは さいこうだね」と {name}は にっこり。"
+    ] },
+
+  { id:42, v:"tractor", short:[
+      "ひまわりばたけで トラクターが おしごと。",
+      "{name}も いっしょに はたけを まわるよ。",
+      "ごとごと、ひまわりが ゆれているね。",
+      "「きいろくて きれいだね」と わらったよ。"
+    ], long:[
+      "なつの ひまわりばたけに トラクターが きたよ。",
+      "「はたけを たがやすよ」と トラクターが いった。",
+      "{name}も うんてんせきの となりに すわったよ。",
+      "ごとごと、おおきな タイヤで すすんでいく。",
+      "ひまわりが かぜで ゆらゆら ゆれているね。",
+      "きいろい はなが そらに むかって さいているよ。",
+      "みつばちも ぶんぶん あそびに きたね。",
+      "「ひまわり だいすき」と {name}は にっこり。"
+    ] },
+
+  { id:43, v:"combine", short:[
+      "あきの たんぼで コンバインが おしごと。",
+      "{name}は おこめの かりいれを みにいくよ。",
+      "ざざー、おこめが たくさん とれるね。",
+      "「おいしそうだね」と {name}が わらったよ。"
+    ], long:[
+      "あきに なって たんぼが きいろく なったよ。",
+      "コンバインが「かりいれ するよ」と やってきた。",
+      "{name}は たんぼの わきで みまもったよ。",
+      "ざざー、おこめが どんどん かられていく。",
+      "たわらに おこめが いっぱい あつまったね。",
+      "「ことしも たくさん とれたね」と おじいちゃん。",
+      "あきかぜが きもちよく ふいているよ。",
+      "「おいしい ごはんが たのしみだね」と {name}は にっこり。"
+    ] },
+
+  { id:44, v:"truck", short:[
+      "あきの はたけで おいもが とれたよ。",
+      "{name}は とらっくで おうちまで はこぶよ。",
+      "ぶーん、おいもが ごろごろ ゆれるね。",
+      "「あまくて おいしそうだね」と わらったよ。"
+    ], long:[
+      "あきの はたけで おおきな おいもが とれたよ。",
+      "「おうちまで はこぶよ」と とらっくが いった。",
+      "{name}も にもつだいに おいもを のせたよ。",
+      "ぶーん、とらっくが ゆっくり はしりだす。",
+      "おいもが にだいの うえで ごろごろ ゆれる。",
+      "あきの かぜが きもちよく ふいてくるね。",
+      "おうちに つくと やきいもの いいにおい。",
+      "「あまくて おいしいね」と {name}は にっこり。"
+    ] },
+
+  { id:45, v:"snowplow", short:[
+      "ゆきの あさ、じょせつしゃが やってきたよ。",
+      "{name}は まどから おしごとを みているよ。",
+      "ざーっ、ゆきを よこへ どかしていくよ。",
+      "「みちが あんしんに なったね」と {name}が いったよ。"
+    ], long:[
+      "ゆきが たくさん つもった さむい あさ。",
+      "じょせつしゃが「みちを きれいにするよ」と きたよ。",
+      "{name}は まどから おうえんして みているよ。",
+      "ざーっ ざーっ、ゆきを よこへ どかしていく。",
+      "みちが だんだん くろく みえてきたね。",
+      "おかあさんが「おかいものに いけるね」と いった。",
+      "じょせつしゃは つぎの みちへ すすんでいくよ。",
+      "「ありがとう じょせつしゃ」と {name}は てを ふった。"
+    ] },
+
+  { id:46, v:"mail", short:[
+      "ふゆの あさ、ゆうびんしゃが やってきたよ。",
+      "{name}は あったかい てがみを うけとるよ。",
+      "ことこと、つぎの おうちへ はしっていく。",
+      "「ありがとう」と {name}が わらったよ。"
+    ], long:[
+      "さむい ふゆの あさ、ゆうびんしゃが きたよ。",
+      "「おてがみ とどけにきたよ」と うんてんしゅさん。",
+      "{name}は あったかい ふくを きて でむかえた。",
+      "ことこと、あかい ゆうびんしゃが とまったね。",
+      "おばあちゃんからの てがみが とどいたよ。",
+      "「うれしいね」と {name}は にっこり わらった。",
+      "ゆうびんしゃは つぎの おうちへ でかけていく。",
+      "「さむいけど がんばってね」と てを ふったよ。"
     ] }
 ];
 
@@ -2307,6 +2565,7 @@ function show(id){
 function go(target){
   clearM4Timers();
   stopParade(); // どの がめんへ うつる ときも、まえの ぱれーど えんしゅつを かならず とめる
+  stopDrive();  // どの がめんへ うつる ときも、まえの どらいぶの おと・アニメを かならず とめる
   applyTimeBand(); // 画面遷移ごとに 時間帯クラスを さいけいさん（そらの えんしゅつ）
   switch(target){
     case "home":    show("home"); greetHome(); break;
@@ -2316,6 +2575,7 @@ function go(target){
     case "m4":      show("m4"); enterM4(); break;
     case "garage":  show("garage"); renderGarage(); break;
     case "parade":  show("parade"); enterParade(); break;
+    case "drive":   show("drive"); enterDrive(); break;
     case "oyasumi": show("oyasumi"); enterOyasumi(); break;
     default:        show(target);
   }
@@ -2688,6 +2948,238 @@ function stopParade(){
   if (stage) stage.innerHTML = "";
 }
 
+/* ============================== ⑥ どらいぶ ごっこ（A-2） ==============================
+   ルール・せいかい・しっぱいは なし。ゆびで のりものを なぞって うごかすだけの ごっこあそび。
+   pointermove で 目標いちを うけとり、じっさいの ひょうじ いちは requestAnimationFrame で
+   すこし おくれて ついてくる（線形補間）。はなしたら そのときの はやさで すこし すべって とまる。 */
+
+/** ドライブで えらべる 代表車。scene は はいけい（road=みち／sea=うみ／sky=そら）。 */
+const DRIVE_POOL = [
+  { id:"shoubou",  scene:"road" },
+  { id:"bus",      scene:"road" },
+  { id:"tractor",  scene:"road" },
+  { id:"racecar",  scene:"road" },
+  { id:"heli",     scene:"sky"  },
+  { id:"fune",     scene:"sea"  }
+];
+/** ループ音の おおもとの おと色・きほん しゅうはすう。はやさに おうじて すこし かわる。 */
+const DRIVE_LOOP_PARAMS = {
+  shoubou: { type:"engine", base:70  },
+  bus:     { type:"engine", base:55  },
+  tractor: { type:"engine", base:48  },
+  racecar: { type:"engine", base:130 },
+  heli:    { type:"rotor",  base:0   },
+  fune:    { type:"engine", base:90  }
+};
+
+let driveRAF = null;
+let driveDragging = false;
+/* まいフレームの DOM けんさくを さけるための キャッシュ（ようそは さいせいせい されない） */
+let driveStageEl = null;
+let driveSecEl = null;
+let drivePointerId = null;
+let driveInertiaActive = false;
+let driveCurX = 0, driveCurY = 0;     // いま ひょうじ している いち
+let driveTargetX = 0, driveTargetY = 0; // ゆびの いま の いち（ドラッグ中のみ こうしん）
+let driveVelX = 0, driveVelY = 0;     // はなした ときの いきおい（かんせい すべり用）
+let driveLastX = 0, driveLastY = 0, driveLastT = 0;
+let driveVehId = DRIVE_POOL[0].id;
+let driveAudio = null; // ループ音の Web Audio ノードいちしき
+
+/** したの えらぶ ボタンを さいしょの 1かいだけ つくる。 */
+function renderDrivePicker(){
+  const picker = document.getElementById("drivePicker");
+  if (!picker || picker.children.length) return;
+  DRIVE_POOL.forEach(entry => {
+    const v = vById[entry.id];
+    if (!v) return;
+    const btn = document.createElement("button");
+    btn.className = "drivepickbtn";
+    btn.setAttribute("data-veh", entry.id);
+    btn.setAttribute("aria-label", v.name);
+    btn.innerHTML = buildVehicleSVG(entry.id);
+    btn.addEventListener("click", () => selectDriveVehicle(entry.id));
+    picker.appendChild(btn);
+  });
+}
+
+/** のりものを のりかえる。はいけい（scene）も あわせて きりかえる。 */
+function selectDriveVehicle(id){
+  const entry = DRIVE_POOL.find(d => d.id === id) || DRIVE_POOL[0];
+  driveVehId = entry.id;
+  const veh = document.getElementById("driveVeh");
+  if (veh) veh.innerHTML = buildVehicleSVG(driveVehId);
+  const stage = document.getElementById("driveStage");
+  if (stage){
+    stage.classList.remove("scene-road","scene-sea","scene-sky");
+    stage.classList.add("scene-" + entry.scene);
+  }
+  document.querySelectorAll(".drivepickbtn").forEach(b => {
+    b.classList.toggle("active", b.getAttribute("data-veh") === driveVehId);
+  });
+  if (driveDragging) startDriveLoopSound(); // ドラッグ中の のりかえは おと色も すぐ かえる
+}
+
+/** のりものを ステージの まんなかへ もどす。 */
+function centerDriveVehicle(){
+  const stage = document.getElementById("driveStage");
+  if (!stage) return;
+  const r = stage.getBoundingClientRect();
+  driveCurX = driveTargetX = r.width / 2;
+  driveCurY = driveTargetY = r.height / 2;
+  renderDrivePosition();
+}
+function renderDrivePosition(){
+  const veh = document.getElementById("driveVeh");
+  if (!veh) return;
+  veh.style.left = driveCurX + "px";
+  veh.style.top = driveCurY + "px";
+}
+
+/** ドライブの おとループを つくって ならしはじめる（おなじ しゅるいの おとは 1つだけ）。 */
+function startDriveLoopSound(){
+  if (!audioCtx) return;
+  stopDriveLoopSound();
+  const ctx = audioCtx;
+  const params = DRIVE_LOOP_PARAMS[driveVehId] || DRIVE_LOOP_PARAMS.shoubou;
+  const gain = ctx.createGain(); gain.gain.value = 0.0001;
+  const lowpass = ctx.createBiquadFilter(); lowpass.type = "lowpass"; lowpass.frequency.value = 1200;
+  gain.connect(lowpass); lowpass.connect(ctx.destination);
+  if (params.type === "rotor"){
+    const src = ctx.createBufferSource(); src.buffer = noiseBuffer(2); src.loop = true;
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 650; bp.Q.value = 1.2;
+    const lfo = ctx.createOscillator(); lfo.type = "square"; lfo.frequency.value = 13;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.5;
+    lfo.connect(lfoGain); lfoGain.connect(gain.gain);
+    src.connect(bp); bp.connect(gain);
+    src.start(); lfo.start();
+    driveAudio = { kind:"rotor", src, lfo, gain, bp };
+  } else {
+    const osc = ctx.createOscillator(); osc.type = "sawtooth"; osc.frequency.value = params.base;
+    const osc2 = ctx.createOscillator(); osc2.type = "sawtooth"; osc2.frequency.value = params.base * 2;
+    const g2 = ctx.createGain(); g2.gain.value = 0.3;
+    osc.connect(gain); osc2.connect(g2); g2.connect(gain);
+    osc.start(); osc2.start();
+    driveAudio = { kind:"engine", osc, osc2, gain };
+  }
+  const vol = 0.16 * sfxGainFactor();
+  gain.gain.linearRampToValueAtTime(Math.max(0.0001, vol), ctx.currentTime + 0.12);
+}
+
+/** ゆびの はやさ（px/フレーム 相当）で 音量・ピッチを すこし かえる。「うんてん かん」を だす。 */
+function updateDriveLoopParams(speed){
+  if (!driveAudio || !audioCtx) return;
+  const s = Math.max(0, Math.min(1, speed / 26));
+  const vol = (0.1 + s * 0.16) * sfxGainFactor();
+  driveAudio.gain.gain.setTargetAtTime(Math.max(0.0001, vol), audioCtx.currentTime, 0.05);
+  if (driveAudio.kind === "engine"){
+    const params = DRIVE_LOOP_PARAMS[driveVehId] || DRIVE_LOOP_PARAMS.shoubou;
+    const f = params.base * (1 + s * 0.9);
+    driveAudio.osc.frequency.setTargetAtTime(f, audioCtx.currentTime, 0.05);
+    driveAudio.osc2.frequency.setTargetAtTime(f * 2, audioCtx.currentTime, 0.05);
+  } else if (driveAudio.kind === "rotor"){
+    driveAudio.bp.frequency.setTargetAtTime(500 + s * 700, audioCtx.currentTime, 0.05);
+  }
+}
+
+/** ループ音を とめる（すこし フェードしてから ノードを はかい）。 */
+function stopDriveLoopSound(){
+  if (!driveAudio) return;
+  const nodes = driveAudio;
+  driveAudio = null;
+  try{
+    if (audioCtx){ nodes.gain.gain.cancelScheduledValues(audioCtx.currentTime); nodes.gain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.06); }
+  }catch(e){}
+  setTimeout(() => {
+    try{ nodes.osc && nodes.osc.stop(); }catch(e){}
+    try{ nodes.osc2 && nodes.osc2.stop(); }catch(e){}
+    try{ nodes.src && nodes.src.stop(); }catch(e){}
+    try{ nodes.lfo && nodes.lfo.stop(); }catch(e){}
+  }, 160);
+}
+
+function onDrivePointerDown(e){
+  const stage = document.getElementById("driveStage");
+  if (!stage) return;
+  e.preventDefault();
+  unlockAudio();
+  driveDragging = true;
+  driveInertiaActive = false;
+  drivePointerId = e.pointerId;
+  try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+  const r = stage.getBoundingClientRect();
+  driveTargetX = e.clientX - r.left;
+  driveTargetY = e.clientY - r.top;
+  driveLastX = driveTargetX; driveLastY = driveTargetY; driveLastT = performance.now();
+  startDriveLoopSound();
+}
+function onDrivePointerMove(e){
+  if (!driveDragging || e.pointerId !== drivePointerId) return;
+  const stage = document.getElementById("driveStage");
+  if (!stage) return;
+  const r = stage.getBoundingClientRect();
+  driveTargetX = Math.max(16, Math.min(r.width - 16, e.clientX - r.left));
+  driveTargetY = Math.max(16, Math.min(r.height - 16, e.clientY - r.top));
+}
+function onDrivePointerUp(e){
+  if (e.pointerId !== drivePointerId) return;
+  driveDragging = false;
+  drivePointerId = null;
+  driveInertiaActive = true;
+  stopDriveLoopSound();
+}
+
+/** まいフレーム よばれる。ドラッグ中は 目標へ すこしずつ ちかづき（ついずい）、
+    はなした あとは いきおいで すべって、ゆっくり とまる（かんせい）。 */
+function driveTick(){
+  driveRAF = requestAnimationFrame(driveTick);
+  const stage = driveStageEl || (driveStageEl = document.getElementById("driveStage"));
+  if (!driveSecEl) driveSecEl = document.getElementById("drive");
+  if (!stage || !driveSecEl.classList.contains("active")) return;
+  if (driveDragging){
+    const ease = 0.22;
+    driveCurX += (driveTargetX - driveCurX) * ease;
+    driveCurY += (driveTargetY - driveCurY) * ease;
+    const t = performance.now();
+    const dt = Math.max(1, t - driveLastT);
+    driveVelX = (driveTargetX - driveLastX) / dt * 16;
+    driveVelY = (driveTargetY - driveLastY) / dt * 16;
+    driveLastX = driveTargetX; driveLastY = driveTargetY; driveLastT = t;
+    updateDriveLoopParams(Math.hypot(driveVelX, driveVelY));
+  } else if (driveInertiaActive){
+    const r = stage.getBoundingClientRect();
+    driveCurX = Math.max(16, Math.min(r.width - 16, driveCurX + driveVelX));
+    driveCurY = Math.max(16, Math.min(r.height - 16, driveCurY + driveVelY));
+    driveVelX *= 0.92; driveVelY *= 0.92;
+    if (Math.hypot(driveVelX, driveVelY) < 0.3){
+      driveInertiaActive = false; driveVelX = 0; driveVelY = 0;
+    }
+  }
+  renderDrivePosition();
+}
+
+function enterDrive(){
+  renderDrivePicker();
+  selectDriveVehicle(driveVehId);
+  driveDragging = false; driveInertiaActive = false; driveVelX = 0; driveVelY = 0;
+  centerDriveVehicle();
+  if (!driveRAF) driveRAF = requestAnimationFrame(driveTick);
+}
+
+/** どらいぶ画面を はなれる ときの 後始末。ループ音・アニメ・pointer capture を かならず とめる。 */
+function stopDrive(){
+  const stage = document.getElementById("driveStage");
+  if (stage && drivePointerId != null){
+    try{ stage.releasePointerCapture(drivePointerId); }catch(e){}
+  }
+  driveDragging = false;
+  drivePointerId = null;
+  driveInertiaActive = false;
+  driveVelX = 0; driveVelY = 0;
+  stopDriveLoopSound();
+  if (driveRAF){ cancelAnimationFrame(driveRAF); driveRAF = null; }
+}
+
 /* ============================== おやすみ画面（C-1 タイマー到達） ============================== */
 function enterOyasumi(){
   const v = pickRandom(VEHICLES);
@@ -2824,6 +3316,19 @@ function bind(){
   document.getElementById("m4CardL").addEventListener("click", () => tapM4("L"));
   document.getElementById("m4CardR").addEventListener("click", () => tapM4("R"));
   document.getElementById("m4Replay").addEventListener("click", playM4Prompt);
+
+  // ⑥ どらいぶ ごっこ（ゆびで なぞって うごかす）
+  const driveStage = document.getElementById("driveStage");
+  if (driveStage){
+    driveStage.addEventListener("pointerdown", onDrivePointerDown);
+    driveStage.addEventListener("pointermove", onDrivePointerMove);
+    driveStage.addEventListener("pointerup", onDrivePointerUp);
+    driveStage.addEventListener("pointercancel", onDrivePointerUp);
+  }
+  // がめんが みえなく なったら（アプリ切替・ロック画面など）ループ音を かならず とめる
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden){ driveDragging = false; stopDriveLoopSound(); }
+  });
 
   // ③ おはなし
   document.querySelectorAll(".pickbtn").forEach(b => {
