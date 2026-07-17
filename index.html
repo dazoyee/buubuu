@@ -49,6 +49,36 @@
     background:repeating-linear-gradient(45deg,var(--ink) 0 16px,var(--yellow) 16px 32px);
   }
 
+  /* ===== そらの えんしゅつ（時間帯で からだ の はいけいを かえる） =====
+     #start / #setup など すでに はいけいを もつ がめんは そのまま。
+     ほかの がめん（#home・各モード・ガレージ・#parent）は はいけいが とうめいの ため
+     body の はいけいが すける。文字・パネルの コントラストを こわさないよう、
+     どの じかんたいも した半分は じゅうぶん あかるく たもつ。 */
+  body.tod-morning{ background:linear-gradient(180deg,#ffe3ee 0%,#ffe9e3 18%,#dcefff 55%,#f3fbff 100%); }
+  body.tod-noon{    background:linear-gradient(180deg,#d9f0ff 0%,#eaf7ff 40%,#fff7e6 78%); }
+  body.tod-evening{ background:linear-gradient(180deg,#ffb37a 0%,#ffcf9e 40%,#fff1df 78%); }
+  body.tod-night{   background:linear-gradient(180deg,#17223f 0%,#2c3b68 10%,#7683b9 24%,#cdd4ec 42%,#eef0fa 100%); }
+  /* よるだけ：つきと ちいさな ほしを うわの ほうに ひかえめに */
+  body.tod-night::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-repeat:no-repeat;
+    background-image:
+      radial-gradient(1.6px 1.6px at 18% 10%, rgba(255,255,255,.9), transparent 60%),
+      radial-gradient(1.2px 1.2px at 42% 6%,  rgba(255,255,255,.75), transparent 60%),
+      radial-gradient(1.6px 1.6px at 66% 13%, rgba(255,255,255,.85), transparent 60%),
+      radial-gradient(1.2px 1.2px at 82% 7%,  rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(1.2px 1.2px at 30% 17%, rgba(255,255,255,.6), transparent 60%);
+    animation:todTwinkle 3.6s ease-in-out infinite;
+  }
+  body.tod-night::after{
+    content:"🌙"; position:fixed; top:calc(var(--safe-top) + 14px); right:20px;
+    font-size:26px; opacity:.55; pointer-events:none; z-index:0;
+  }
+  /* ホームでは みぎうえに はぐるまボタンが あるので、つきは ひだりうえに よける */
+  body.tod-night:has(#home.active)::after{ right:auto; left:20px; }
+  @keyframes todTwinkle{ 0%,100%{ opacity:.65; } 50%{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){ body.tod-night::before{ animation:none; } }
+
   /* 画面共通 */
   .screen{
     position:fixed; inset:0;
@@ -214,6 +244,21 @@
   .closebtn{ background:var(--ink); }
   .note{ font-size:14px; color:#888; margin-top:14px; line-height:1.6; }
   .hide{ display:none !important; }
+
+  /* ===== 保護者せってい：よるモード / おと・よみあげ ===== */
+  #parent .sublbl{ font-size:16px; color:#666; margin:16px 0 8px; font-weight:800; }
+  #parent .nightrow{ display:flex; align-items:center; gap:10px; }
+  #parent .nightrow .bigbtn{ flex:1; font-size:16px; padding:14px 10px; }
+  #parent .nightrow .bigbtn.off{ background:#b0bec5; }
+  #parent select.selfield{
+    font-family:inherit; font-size:16px; font-weight:800; color:var(--ink);
+    padding:10px 14px; border:3px solid var(--amber); border-radius:14px; background:#fff;
+  }
+  #parent .rangerow{ display:flex; align-items:center; gap:12px; }
+  #parent .rangerow input[type="range"]{ flex:1; accent-color:var(--amber); height:28px; }
+  #parent .rangeval{
+    font-size:15px; font-weight:800; color:var(--ink); min-width:52px; text-align:right;
+  }
 
   /* ===== のりもの SVG イラスト & アニメーション ===== */
   .svgveh{ width:100%; height:100%; display:block; overflow:visible; }
@@ -431,6 +476,31 @@
         <li>このアプリを開き直すと、より自然な声が自動で選ばれます</li>
       </ol>
     </details>
+
+    <div class="sublbl">🌙 よるモード（おそい じかんは おとを ひかえめに）</div>
+    <div class="nightrow">
+      <button class="bigbtn" id="nightToggle" style="background:var(--purple);">
+        <span class="ico">🌙</span><span id="nightToggleLabel">よるモード オン</span>
+      </button>
+      <select id="nightStartSelect" class="selfield" aria-label="よるモードの はじまる じこく">
+        <option value="18">18じから</option>
+        <option value="19">19じから</option>
+        <option value="20">20じから</option>
+      </select>
+    </div>
+
+    <div class="sublbl">🔊 おとの おおきさ</div>
+    <div class="rangerow">
+      <input type="range" id="sfxVolRange" min="0" max="100" step="5" value="100" aria-label="おとの おおきさ" />
+      <span class="rangeval" id="sfxVolLabel">100%</span>
+    </div>
+
+    <div class="sublbl">🗣️ よみあげの はやさ</div>
+    <div class="rangerow">
+      <input type="range" id="speechRateRange" min="0.7" max="1.2" step="0.02" value="0.88" aria-label="よみあげの はやさ" />
+      <span class="rangeval" id="speechRateLabel">0.88</span>
+    </div>
+
     <div class="note">
       「こえテスト」で にほんごの こえが でるか かくにん できます。<br>
       この がめんは おとなが 3びょう ながおしで ひらきます。
@@ -449,7 +519,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.5.0";
+const APP_VERSION = "v0.6.0";
 
 /* ----------------------------- 同梱データ ----------------------------- */
 
@@ -1657,7 +1727,11 @@ const STORE = {
   name:     "buubuu.name",
   garage:   "buubuu.garage",
   read:     "buubuu.readStories",
-  complete: "buubuu.complete"
+  complete: "buubuu.complete",
+  nightMode:  "buubuu.nightMode",   // "1"/"0"（よるモード オン/オフ。既定 オン）
+  nightStart: "buubuu.nightStart",  // "18"/"19"/"20"（よるモードの はじまる じこく。既定 19）
+  sfxVol:     "buubuu.sfxVol",      // 0〜100（こうかおんの おおきさ %。既定 100）
+  speechRate: "buubuu.speechRate"   // 0.7〜1.2（よみあげの はやさ。既定 0.88）
 };
 
 const State = {
@@ -1665,6 +1739,10 @@ const State = {
   garage: loadSet(STORE.garage),
   read: loadSet(STORE.read),
   complete: localStorage.getItem(STORE.complete) === "1",
+  nightMode: loadBool(STORE.nightMode, true),
+  nightStart: loadNum(STORE.nightStart, 19, 18, 20),
+  sfxVol: loadNum(STORE.sfxVol, 100, 0, 100),
+  speechRate: loadNum(STORE.speechRate, 0.88, 0.7, 1.2),
   audioReady: false,
   jaVoice: null,
   m1: null,   // げんざいの のりもの(これなあに)
@@ -1691,6 +1769,56 @@ function loadSet(key){
 }
 function saveSet(key,set){
   try{ localStorage.setItem(key, JSON.stringify([...set])); }catch(e){}
+}
+/** 真偽値を localStorage から よみこむ。あたいが ない ばあいは きてい値。 */
+function loadBool(key, def){
+  const v = localStorage.getItem(key);
+  if (v === null) return def;
+  return v === "1";
+}
+/** すう値を localStorage から よみこむ。あたいが ない／こわれている／はんい外の ばあいは
+    きてい値 or クランプ（min/max を わたした ときだけ）。 */
+function loadNum(key, def, min, max){
+  const v = localStorage.getItem(key);
+  if (v === null || v === "") return def;
+  const n = parseFloat(v);
+  if (isNaN(n)) return def;
+  if (min !== undefined) return Math.max(min, Math.min(max, n));
+  return n;
+}
+
+/* ============================== そらの えんしゅつ・よるモード（時間帯） ==============================
+   端末じこく（new Date().getHours()）だけで はんてい。つうしんは しない。 */
+
+/** ひょうじ用の 時間帯（B-1）：あさ(5-9) / ひる(10-15) / ゆうがた(16-18) / よる(19-4)。こていの くぎり。 */
+function getTimeBand(){
+  const h = new Date().getHours();
+  if (h >= 5 && h <= 9) return "morning";
+  if (h >= 10 && h <= 15) return "noon";
+  if (h >= 16 && h <= 18) return "evening";
+  return "night";
+}
+/** からだ に 時間帯クラスを つけかえる。おきどう時と go() の たびに よぶ。 */
+function applyTimeBand(){
+  const band = getTimeBand();
+  document.body.classList.remove("tod-morning","tod-noon","tod-evening","tod-night");
+  document.body.classList.add("tod-" + band);
+  return band;
+}
+
+/** よるモード（C-2）：おと だけを ひかえめに する。時間帯（B-1）とは べつに、
+    ほごしゃが えらんだ はじまり じこく（18/19/20）〜あさ5じ まえ を「よるの あいだ」と する。 */
+function isNightWindowNow(){
+  const h = new Date().getHours();
+  return h >= State.nightStart || h < 5;
+}
+function isNightModeActive(){
+  return State.nightMode && isNightWindowNow();
+}
+/** こうかおんの じっこう音量けいすう ＝ おとの おおきさ設定 × よるモードけいすう。 */
+function sfxGainFactor(){
+  const vol = Math.max(0, Math.min(100, State.sfxVol)) / 100;
+  return vol * (isNightModeActive() ? 0.5 : 1);
 }
 
 /* ============================== 音声（Web Speech） ============================== */
@@ -1729,9 +1857,9 @@ function speak(text){
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "ja-JP";
-    u.rate = 0.88;   // やや おそめ（自然さ重視）
+    u.rate = State.speechRate;  // よみあげの はやさ（保護者せっていで 0.7〜1.2 に調整可。既定 0.88）
     u.pitch = 1.05;  // やさしいが 不自然に高すぎない
-    u.volume = 1.0;
+    u.volume = isNightModeActive() ? 0.8 : 1.0;  // よるモード中は すこし ひかえめに
     if (State.jaVoice) u.voice = State.jaVoice;
     speechSynthesis.speak(u);
   }catch(e){}
@@ -1778,8 +1906,11 @@ function playSound(soundType){
   if (audioCtx.state === "suspended") audioCtx.resume();
   const ctx = audioCtx;
   const now = ctx.currentTime;
+  // おと・よみあげ せってい（C-4）× よるモード（C-2）を かけあわせた じっこう音量けいすう。
+  // さいせいの たびに その ときの じこく・せっていで けいさんしなおす（永続の マスターGainNodeは もたない）。
+  const volFactor = sfxGainFactor();
   function out(gainVal){
-    const g = ctx.createGain(); g.gain.value = gainVal;
+    const g = ctx.createGain(); g.gain.value = gainVal * volFactor;
     const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 14000;
     g.connect(lp); lp.connect(ctx.destination);
     return g;
@@ -2043,6 +2174,7 @@ function show(id){
 
 function go(target){
   clearM4Timers();
+  applyTimeBand(); // 画面遷移ごとに 時間帯クラスを さいけいさん（そらの えんしゅつ）
   switch(target){
     case "home":   show("home"); greetHome(); break;
     case "m1":     show("m1"); enterM1(); break;
@@ -2118,6 +2250,10 @@ function greetHome(){
     nm + "、こんにちは！ なにする？",
     "ぶーぶーだよ。" + nm + "、あそぼう！"
   ];
+  // よるの じかんたい（B-1）だけ、やさしい おやすみの ひとことも こうほに くわえる。
+  if (getTimeBand() === "night"){
+    lines.push(nm + "、そろそろ おやすみかな？");
+  }
   const msg = pickRandom(lines);
   document.getElementById("homeSpeech").textContent = msg;
   speak(msg);
@@ -2302,7 +2438,8 @@ function speakStory(sentences){
   speechSynthesis.cancel();
   sentences.forEach((line, i) => {
     const u = new SpeechSynthesisUtterance(line);
-    u.lang = "ja-JP"; u.rate = 0.86; u.pitch = 1.05; u.volume = 1.0;
+    u.lang = "ja-JP"; u.rate = State.speechRate; u.pitch = 1.05;
+    u.volume = isNightModeActive() ? 0.8 : 1.0;
     if (State.jaVoice) u.voice = State.jaVoice;
     if (i < sentences.length - 1) u.text = line + "、";
     speechSynthesis.speak(u);
@@ -2368,7 +2505,21 @@ function cancelPress(e){
 function openParent(){
   document.getElementById("nameInput2").value = State.name;
   updateVoiceInfo();
+  updateNightToggleUI();
+  document.getElementById("nightStartSelect").value = String(State.nightStart);
+  document.getElementById("sfxVolRange").value = String(State.sfxVol);
+  document.getElementById("sfxVolLabel").textContent = State.sfxVol + "%";
+  document.getElementById("speechRateRange").value = String(State.speechRate);
+  document.getElementById("speechRateLabel").textContent = State.speechRate.toFixed(2);
   show("parent");
+}
+
+/** よるモード トグルボタンの みため を State に あわせて こうしん。 */
+function updateNightToggleUI(){
+  const btn = document.getElementById("nightToggle");
+  const lbl = document.getElementById("nightToggleLabel");
+  if (lbl) lbl.textContent = State.nightMode ? "よるモード オン" : "よるモード オフ";
+  if (btn) btn.classList.toggle("off", !State.nightMode);
 }
 
 /** 設定画面に いま えらばれている 音声名を ひょうじ。 */
@@ -2494,10 +2645,49 @@ function bind(){
   });
   document.getElementById("parentClose").addEventListener("click", () => go("home"));
 
+  // よるモード（C-2）オン/オフ・はじまり じこく
+  document.getElementById("nightToggle").addEventListener("click", () => {
+    State.nightMode = !State.nightMode;
+    try{ localStorage.setItem(STORE.nightMode, State.nightMode ? "1" : "0"); }catch(e){}
+    updateNightToggleUI();
+  });
+  document.getElementById("nightStartSelect").addEventListener("change", (e) => {
+    const n = parseInt(e.target.value, 10);
+    State.nightStart = isNaN(n) ? 19 : n;
+    try{ localStorage.setItem(STORE.nightStart, String(State.nightStart)); }catch(err){}
+  });
+
+  // おとの おおきさ（C-4）：ドラッグ中は ひょうじだけ こうしん、はなしたら ほぞん＋プレビュー
+  const sfxRange = document.getElementById("sfxVolRange");
+  sfxRange.addEventListener("input", (e) => {
+    document.getElementById("sfxVolLabel").textContent = e.target.value + "%";
+  });
+  sfxRange.addEventListener("change", (e) => {
+    const n = parseInt(e.target.value, 10);
+    State.sfxVol = isNaN(n) ? 100 : n;
+    try{ localStorage.setItem(STORE.sfxVol, String(State.sfxVol)); }catch(err){}
+    unlockAudio();
+    playSound("horn");
+  });
+
+  // よみあげの はやさ（C-4）：おなじく ドラッグ中は ひょうじだけ、はなしたら ほぞん＋プレビュー
+  const rateRange = document.getElementById("speechRateRange");
+  rateRange.addEventListener("input", (e) => {
+    document.getElementById("speechRateLabel").textContent = parseFloat(e.target.value).toFixed(2);
+  });
+  rateRange.addEventListener("change", (e) => {
+    const n = parseFloat(e.target.value);
+    State.speechRate = isNaN(n) ? 0.88 : n;
+    try{ localStorage.setItem(STORE.speechRate, String(State.speechRate)); }catch(err){}
+    speak("これくらいの はやさだよ");
+  });
+
   // ダブルタップ ズームの よくせい
   document.addEventListener("dblclick", e => e.preventDefault(), { passive:false });
 }
 
+applyTimeBand(); // きどう時にも そらの えんしゅつを はんてい
+setInterval(applyTimeBand, 60000); // ひらきっぱなしでも 時間帯の さかいめで そらが かわる
 bind();
 </script>
 </body>
