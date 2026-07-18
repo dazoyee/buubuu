@@ -328,6 +328,7 @@
   }
   .paradeveh{ position:absolute; bottom:18%; left:-32%; width:150px; }
   .paradeveh svg.svgveh{ width:150px; height:112px; display:block; }
+  .paradeveh.flip svg.svgveh{ transform:scaleX(-1); }
   .paradeveh.crossing{ animation-name:paradeCross; animation-timing-function:linear; animation-fill-mode:forwards; }
   @keyframes paradeCross{ from{ left:-32%; } to{ left:118%; } }
   /* うごきを へらす せってい：よこぎりを やめて まんなかに じゅんばんに ひょうじ */
@@ -3134,6 +3135,13 @@ function renderGarage(){
 /** ガレージが からの ときに つかう 代表の のりもの（バラエティが でるよう 6しゅるい）。 */
 const PARADE_DEFAULT_IDS = ["shoubou","patokaa","kyuukyuu","bus","densha","hikouki"];
 
+/** イラストが 左むき（=はっしんする ほうこうが 左）に えがかれている のりもの。
+ * パレードは 左から右へ よこぎるので、この id だけ さかさまに して すすむ むきを あわせる。 */
+const PARADE_FLIP_IDS = new Set([
+  "kikansha","hikouki","racecar","shovel","loader","tractor","combine",
+  "snowplow","bulldozer","roller","hashigo","gokart","heli","rescueheli","hovercraft"
+]);
+
 /** よこぎりを くりかえす ための タイマー（うごきを へらす せっていの ときだけ つかう）。 */
 let paradeTimer = null;
 
@@ -3166,7 +3174,7 @@ function playParadeStep(){
   const v = vById[State.paradeQueue[State.paradeIdx++]];
   if (!v){ playParadeStep(); return; }
   const el = document.createElement("div");
-  el.className = "paradeveh";
+  el.className = "paradeveh" + (PARADE_FLIP_IDS.has(v.id) ? " flip" : "");
   el.innerHTML = buildVehicleSVG(v);
   stage.appendChild(el);
   speak(v.name, { rateMul:0.85, volMul:0.6 }); // ゆっくり・ひかえめ（効果音は ならさない：クールダウン用途）
