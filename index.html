@@ -306,7 +306,7 @@
   /* ===== 歯車（保護者ゲート）長押しフィードバック ===== */
   .gearbtn{ position:relative; overflow:hidden; touch-action:none; }
   .gearfill{ position:absolute; inset:0; border-radius:16px; background:radial-gradient(circle,var(--orange),var(--amber)); transform:scale(0); opacity:0; transform-box:border-box; transform-origin:center; pointer-events:none; }
-  .gearbtn.holding .gearfill{ animation:gearfill 3s linear forwards; }
+  .gearbtn.holding .gearfill{ animation:gearfill 1.5s linear forwards; }
   .gearico{ position:relative; z-index:1; }
   @keyframes gearfill{ 0%{ transform:scale(0); opacity:0; } 12%{ opacity:.55; } 100%{ transform:scale(1.7); opacity:.9; } }
 
@@ -622,7 +622,7 @@
 
     <div class="note">
       「こえテスト」で にほんごの こえが でるか かくにん できます。<br>
-      この がめんは おとなが 3びょう ながおしで ひらきます。<br>
+      この がめんは おとなが 1.5びょう ながおしで ひらきます。<br>
       おやすみタイマーは、この がめんで「おやすみ なし」に もどすまで つづきます。
     </div>
   </div>
@@ -648,7 +648,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.9.1";
+const APP_VERSION = "v0.9.2";
 
 /** アプリを ひらいた じこく（おやすみタイマー C-1 の きじゅん。セッション内のみで つかう）。 */
 const SESSION_START = Date.now();
@@ -3461,7 +3461,7 @@ function enterOyasumi(){
 /* ============================== 保護者ゲート / せってい ============================== */
 let pressTimer = null;
 /**
- * 3びょう ながおし かいし。
+ * 1.5びょう ながおし かいし。
  * iOS が 指の微動で pointercancel を だして タイマーを つぶすため、
  * setPointerCapture で ほじし、touch-action:none（CSS）で ブラウザの ジェスチャ奪取を ふせぐ。
  */
@@ -3471,7 +3471,7 @@ function startPress(e){
   try{ if (e && e.pointerId != null && el.setPointerCapture) el.setPointerCapture(e.pointerId); }catch(_){}
   if (el) el.classList.add("holding");
   clearTimeout(pressTimer);
-  pressTimer = setTimeout(() => { if (el) el.classList.remove("holding"); openParent(); }, 3000);
+  pressTimer = setTimeout(() => { if (el) el.classList.remove("holding"); openParent(); }, 1500);
 }
 function cancelPress(e){
   clearTimeout(pressTimer);
@@ -3612,7 +3612,7 @@ function bind(){
     chooseStory(); renderStory();
   });
 
-  // 保護者ゲート（3びょう ながおし）— ホームの はぐるま
+  // 保護者ゲート（1.5びょう ながおし）— ホームの はぐるま
   // pointerleave は つけない（キャプチャ中に 指が すこし ずれても 長押しを 継続）
   const gear = document.getElementById("gearBtn");
   gear.addEventListener("pointerdown", startPress);
@@ -3625,7 +3625,7 @@ function bind(){
   // iOS の コンテキストメニュー（長押し）抑止
   gear.addEventListener("contextmenu", e => e.preventDefault());
 
-  // おやすみ画面（C-1）の はぐるま — こどもむけの かいじょボタンは おかず、おなじ 3びょう ながおしのみ
+  // おやすみ画面（C-1）の はぐるま — こどもむけの かいじょボタンは おかず、おなじ 1.5びょう ながおしのみ
   const oyaGear = document.getElementById("oyasumiGear");
   oyaGear.addEventListener("pointerdown", startPress);
   oyaGear.addEventListener("pointerup", cancelPress);
