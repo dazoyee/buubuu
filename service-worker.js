@@ -1,7 +1,7 @@
 /* ぶーぶーランド Service Worker — 全アセットをキャッシュしオフライン動作させる */
 "use strict";
 
-const CACHE = "buubuu-v0_9_2";
+const CACHE = "buubuu-v0_9_3";
 const ASSETS = [
   "./",
   "./index.html",
