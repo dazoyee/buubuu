@@ -648,7 +648,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.9.3";
+const APP_VERSION = "v0.10.0";
 
 /** アプリを ひらいた じこく（おやすみタイマー C-1 の きじゅん。セッション内のみで つかう）。 */
 const SESSION_START = Date.now();
@@ -3207,6 +3207,9 @@ function stopParade(){
 /** ドライブで えらべる 代表車。scene は はいけい（road=みち／sea=うみ／sky=そら）。 */
 const DRIVE_POOL = [
   { id:"shoubou",  scene:"road" },
+  { id:"patokaa",  scene:"road" },
+  { id:"kyuukyuu", scene:"road" },
+  { id:"mail",     scene:"road" },
   { id:"bus",      scene:"road" },
   { id:"tractor",  scene:"road" },
   { id:"racecar",  scene:"road" },
@@ -3215,12 +3218,15 @@ const DRIVE_POOL = [
 ];
 /** ループ音の おおもとの おと色・きほん しゅうはすう。はやさに おうじて すこし かわる。 */
 const DRIVE_LOOP_PARAMS = {
-  shoubou: { type:"engine", base:70  },
-  bus:     { type:"engine", base:55  },
-  tractor: { type:"engine", base:48  },
-  racecar: { type:"engine", base:130 },
-  heli:    { type:"rotor",  base:0   },
-  fune:    { type:"engine", base:90  }
+  shoubou:  { type:"engine", base:70  },
+  patokaa:  { type:"engine", base:75  },
+  kyuukyuu: { type:"engine", base:65  },
+  mail:     { type:"engine", base:58  },
+  bus:      { type:"engine", base:55  },
+  tractor:  { type:"engine", base:48  },
+  racecar:  { type:"engine", base:130 },
+  heli:     { type:"rotor",  base:0   },
+  fune:     { type:"engine", base:90  }
 };
 
 let driveRAF = null;
