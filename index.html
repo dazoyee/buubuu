@@ -326,11 +326,16 @@
     content:""; position:absolute; left:0; right:0; bottom:16%; height:6px; opacity:.8;
     background:repeating-linear-gradient(90deg,#fff 0 22px, transparent 22px 44px);
   }
+  .paradestage{ cursor:pointer; } /* タップで はやさを かえられる ことを しめす */
   .paradeveh{ position:absolute; bottom:18%; left:-32%; width:174px; }
   .paradeveh svg.svgveh{ width:174px; height:130px; display:block; }
   .paradeveh.flip svg.svgveh{ transform:scaleX(-1); }
   .paradeveh.crossing{ animation-name:paradeCross; animation-timing-function:linear; animation-fill-mode:forwards; }
   @keyframes paradeCross{ from{ left:-32%; } to{ left:118%; } }
+  /* タップして はやさが あがった しゅんかんの、ひかりの フィードバック */
+  .paradeveh.paradeboost svg.svgveh{ animation:paradeBoostGlow .4s ease-out; }
+  @keyframes paradeBoostGlow{ 0%{ filter:brightness(1.5) drop-shadow(0 0 14px rgba(255,224,102,.9)); } 100%{ filter:none; } }
+  @media (prefers-reduced-motion: reduce){ .paradeveh.paradeboost svg.svgveh{ animation:none; } }
   /* うごきを へらす せってい：よこぎりを やめて まんなかに じゅんばんに ひょうじ */
   .paradestage.reduced{ display:flex; align-items:center; justify-content:center; }
   .paradestage.reduced::after{ display:none; }
@@ -648,7 +653,7 @@
    ========================================================================= */
 
 /** アプリのバージョン（トップ画面に表示）。 */
-const APP_VERSION = "v0.10.0";
+const APP_VERSION = "v0.11.0";
 
 /** アプリを ひらいた じこく（おやすみタイマー C-1 の きじゅん。セッション内のみで つかう）。 */
 const SESSION_START = Date.now();
@@ -2100,6 +2105,7 @@ const State = {
   paradeActive: false,     // ぱれーど がめんが うごいているか（後始末の めやす）
   paradeQueue: [],
   paradeIdx: 0,
+  paradeSpeedMul: 1,       // タップで あがり、じかんで もとに もどる はやさ けいすう
   audioReady: false,
   jaVoice: null,
   m1: null,   // げんざいの のりもの(これなあに)
@@ -3129,7 +3135,8 @@ function renderGarage(){
 }
 
 /* ============================== ⑤ のりものパレード（A-3・ながめる） ==============================
-   タップ操作 なし。ガレージに とうろく ずみの のりものが 1だいずつ ゆっくり よこぎる。
+   がめんを タップすると いま よこぎっている のりものが ちょっとだけ はやく なる（れんだで もっと はやく）。
+   ゆびを はなして しばらく すると、じかんで もとの はやさに もどる。
    がめんを はなれたら go() から よばれる stopParade() で かならず とめる。 */
 
 /** ガレージが からの ときに つかう 代表の のりもの（バラエティが でるよう 6しゅるい）。 */
@@ -3142,8 +3149,19 @@ const PARADE_FLIP_IDS = new Set([
   "snowplow","bulldozer","roller","hashigo","gokart","heli","rescueheli","hovercraft"
 ]);
 
+/** うごきを へらす せっていの ときの、1だい あたりの ひょうじ じかん（ミリびょう）。 */
+const PARADE_STATIC_MS = 4000;
+/** タップ 1かい あたりの ブースト りょう・じょうげんの はやさ けいすう。 */
+const PARADE_SPEED_BOOST = 0.6;
+const PARADE_SPEED_MAX = 3;
+/** じかんで もとに もどる ときの、1かい あたりの げんすい りょうと かんかく（ミリびょう）。 */
+const PARADE_SPEED_DECAY = 0.15;
+const PARADE_DECAY_MS = 400;
+
 /** よこぎりを くりかえす ための タイマー（うごきを へらす せっていの ときだけ つかう）。 */
 let paradeTimer = null;
+/** はやさを じかんで もとに もどす ための タイマー。 */
+let paradeDecayTimer = null;
 
 function paradeVehicleQueue(){
   // こわれた／しっこうした id は のぞく（vById に ない id で むげん さいき しないように）
@@ -3156,8 +3174,11 @@ function enterParade(){
   State.paradeActive = true;
   State.paradeQueue = paradeVehicleQueue();
   State.paradeIdx = 0;
+  State.paradeSpeedMul = 1;
   const stage = document.getElementById("paradeStage");
   if (stage){ stage.innerHTML = ""; stage.classList.toggle("reduced", prefersReducedMotion()); }
+  clearInterval(paradeDecayTimer);
+  paradeDecayTimer = setInterval(decayParadeSpeed, PARADE_DECAY_MS);
   playParadeStep();
 }
 
@@ -3179,13 +3200,43 @@ function playParadeStep(){
   stage.appendChild(el);
   speak(v.name, { rateMul:0.85, volMul:0.6 }); // ゆっくり・ひかえめ（効果音は ならさない：クールダウン用途）
   if (prefersReducedMotion()){
-    paradeTimer = setTimeout(playParadeStep, 4000); // まんなかに じゅんばん ひょうじ
+    paradeTimer = setTimeout(playParadeStep, PARADE_STATIC_MS / State.paradeSpeedMul); // まんなかに じゅんばん ひょうじ
   } else {
     const dur = 6 + Math.random() * 2; // 1だい あたり 6〜8びょう
     el.style.animationDuration = dur + "s";
     el.addEventListener("animationend", playParadeStep, { once:true });
-    requestAnimationFrame(() => el.classList.add("crossing"));
+    requestAnimationFrame(() => {
+      el.classList.add("crossing");
+      el.getAnimations().forEach(a => { a.playbackRate = State.paradeSpeedMul; }); // タップで あがった はやさを ひきつぐ
+    });
   }
+}
+
+/** いま よこぎっている のりものの アニメーションに、げんざいの はやさ けいすうを かけなおす。 */
+function applyParadeSpeed(){
+  if (prefersReducedMotion()) return; // 静止ひょうじの ときは アニメーションが ないので なにも しない
+  const stage = document.getElementById("paradeStage");
+  const el = stage && stage.querySelector(".paradeveh");
+  if (!el) return;
+  el.getAnimations().forEach(a => { a.playbackRate = State.paradeSpeedMul; });
+}
+
+/** じかんが たつごとに はやさを すこしずつ もとの 1ばいに もどす。 */
+function decayParadeSpeed(){
+  if (!State.paradeActive || State.paradeSpeedMul <= 1) return;
+  State.paradeSpeedMul = Math.max(1, State.paradeSpeedMul - PARADE_SPEED_DECAY);
+  applyParadeSpeed();
+}
+
+/** がめんを タップした ときの しょり。はやさを あげて、おと・うごきで フィードバックする。 */
+function onParadeTap(){
+  if (!State.paradeActive) return;
+  State.paradeSpeedMul = Math.min(PARADE_SPEED_MAX, State.paradeSpeedMul + PARADE_SPEED_BOOST);
+  applyParadeSpeed();
+  playSound("whoosh");
+  const stage = document.getElementById("paradeStage");
+  const el = stage && stage.querySelector(".paradeveh");
+  if (el) retriggerAnim(el, "paradeboost");
 }
 
 /** ぱれーど画面を はなれる ときの 後始末。タイマー・よみあげを かならず とめる。 */
@@ -3193,6 +3244,7 @@ function stopParade(){
   if (!State.paradeActive) return;
   State.paradeActive = false;
   clearTimeout(paradeTimer); paradeTimer = null;
+  clearInterval(paradeDecayTimer); paradeDecayTimer = null;
   // パレードの なまえ よみあげが つぎの がめんに もちこされない よう とめる
   if ("speechSynthesis" in window) speechSynthesis.cancel();
   const stage = document.getElementById("paradeStage");
@@ -3592,6 +3644,10 @@ function bind(){
   document.getElementById("m4CardL").addEventListener("click", () => tapM4("L"));
   document.getElementById("m4CardR").addEventListener("click", () => tapM4("R"));
   document.getElementById("m4Replay").addEventListener("click", playM4Prompt);
+
+  // ⑤ のりものパレード（タップで はやさを かえる）
+  const paradeStage = document.getElementById("paradeStage");
+  if (paradeStage) paradeStage.addEventListener("click", onParadeTap);
 
   // ⑥ どらいぶ ごっこ（ゆびで なぞって うごかす）
   const driveStage = document.getElementById("driveStage");
